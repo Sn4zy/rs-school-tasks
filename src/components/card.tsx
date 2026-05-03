@@ -1,19 +1,17 @@
 import { Component } from 'react'
 import type { PokemonDetails } from '../../types/index.ts'
 
-interface Props {
-  pokemon: PokemonDetails
-}
+type Props = { pokemon: PokemonDetails }
 
 class Card extends Component<Props> {
   render() {
-    const { pokemon } = this.props
+    const { name, sprite, flavorText } = this.props.pokemon
     return (
-      <div className="card">
-        <img src={pokemon.sprite} alt={pokemon.name} />
-        <h3>{pokemon.name}</h3>
-        <p>{pokemon.flavorText}</p>
-      </div>
+      <article className="pokemon-card">
+        <img className="pokemon-sprite" src={sprite} alt="" />
+        <h3 className="pokemon-name">{name}</h3>
+        <p className="pokemon-description">{flavorText}</p>
+      </article>
     )
   }
 }
