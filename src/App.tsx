@@ -1,7 +1,7 @@
 import { Component } from 'react'
 import './App.css'
-import Result from './components/result.tsx'
-import Search from './components/search.tsx'
+import ErrorBoundary from './components/errorBoundary.tsx'
+import Layout from './components/layout.tsx'
 import { readStoredSearch } from './utils/searchStorage.ts'
 
 interface AppState {
@@ -21,16 +21,9 @@ class App extends Component<Record<string, never>, AppState> {
     const { committedQuery } = this.state
 
     return (
-      <main className="main-page">
-        <h1>Pokedex</h1>
-
-        <section className="search-area">
-          <h2 className="search-area-heading">Search</h2>
-          <Search committedQuery={committedQuery} onCommittedSearch={this.commitSearch} />
-        </section>
-
-        <Result query={committedQuery} />
-      </main>
+      <ErrorBoundary>
+        <Layout committedQuery={committedQuery} onCommitSearch={this.commitSearch} />
+      </ErrorBoundary>
     )
   }
 }

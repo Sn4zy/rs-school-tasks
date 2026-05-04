@@ -196,7 +196,6 @@
   text-align: center;
 }
 
-/* Top: search strip — bottom: results (task layout) */
 
 .search-area,
 .results-area {
@@ -398,4 +397,38 @@
   margin: 0;
   max-width: 58ch;
   line-height: 1.45;
+}
+
+.error-boundary-root {
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: 2rem;
+  box-sizing: border-box;
+}
+
+.error-boundary-message {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--text-h);
+}
+
+.debug-error-row {
+  margin-top: 0.75rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.error-throw-button {
+  font: inherit;
+  cursor: pointer;
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  border: 1px dashed rgba(198, 40, 40, 0.55);
+  background: transparent;
+  color: var(--text-h);
+}
+
+.error-throw-button:hover {
+  background: rgba(198, 40, 40, 0.08);
 }
