@@ -5,10 +5,11 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import reactPlugin from "eslint-plugin-react";
 import eslintConfigPrettier from "eslint-config-prettier/flat";
 import tseslint from "typescript-eslint";
+import vitestPlugin from "eslint-plugin-vitest";
 import { defineConfig, globalIgnores } from "eslint/config";
 
 export default defineConfig([
-  globalIgnores(["dist"]),
+  globalIgnores(["dist", "coverage"]),
   {
     files: ["**/*.{ts,tsx}"],
     extends: [
@@ -22,6 +23,20 @@ export default defineConfig([
     ],
     languageOptions: {
       globals: globals.browser,
+    },
+  },
+  {
+    files: ["**/*.{test,spec}.{ts,tsx}"],
+    plugins: { vitest: vitestPlugin },
+    rules: {
+      ...vitestPlugin.configs.recommended.rules,
+      "react-refresh/only-export-components": "off",
+    },
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        ...vitestPlugin.environments.env.globals,
+      },
     },
   },
 ]);
