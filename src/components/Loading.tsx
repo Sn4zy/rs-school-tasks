@@ -9,8 +9,8 @@ class Loading extends Component<Props> {
     const label = this.props.label ?? 'Loading…'
 
     return (
-      <div className="loading-panel">
-        <div className="loading-spinner" />
+      <div className="loading-panel" role="status" aria-live="polite">
+        <div className="loading-spinner" aria-label="Loading" />
         <span>{label}</span>
       </div>
     )
