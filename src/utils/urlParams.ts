@@ -3,6 +3,12 @@ export function parsePageParam(value: string | null): number {
   return Number.isFinite(page) && page >= 1 ? page : 1
 }
 
-export function buildPageSearch(page: number): string {
-  return `?page=${page}`
+export function buildListSearch(page: number, detailsId?: string | null): string {
+  const params = new URLSearchParams()
+  params.set('page', String(page))
+  if (detailsId) {
+    params.set('details', detailsId)
+  }
+  const query = params.toString()
+  return query ? `?${query}` : ''
 }

@@ -1,7 +1,7 @@
-import { useCallback, useEffect } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useCallback, useEffect, type MouseEvent } from 'react'
+import { Outlet, useMatch, useNavigate, useSearchParams } from 'react-router-dom'
 
-import { parsePageParam } from '../utils/urlParams.ts'
+import { buildListSearch, parsePageParam } from '../utils/urlParams.ts'
 import ErrorThrower from './errorThrower.tsx'
 import Header from './header.tsx'
 import Result from './result.tsx'
@@ -13,25 +13,71 @@ interface Props {
 }
 
 export default function Layout({ committedQuery, onCommitSearch }: Props) {
+  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
+  const detailsRoute = useMatch('/details')
   const page = parsePageParam(searchParams.get('page'))
+  const detailsParam = searchParams.get('details')
+  const selectedId =
+    detailsParam !== null && detailsParam !== ''
+      ? Number.parseInt(detailsParam, 10)
+      : null
+  const showDetailsPanel =
+    detailsRoute !== null &&
+    selectedId !== null &&
+    !Number.isNaN(selectedId)
 
   useEffect(() => {
     if (!searchParams.get('page')) {
-      setSearchParams({ page: '1' }, { replace: true })
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev)
+          next.set('page', '1')
+          return next
+        },
+        { replace: true },
+      )
     }
   }, [searchParams, setSearchParams])
 
   const commitSearch = useCallback(
     (trimmed: string) => {
       onCommitSearch(trimmed)
-      setSearchParams({ page: '1' })
+      navigate({ pathname: '/', search: buildListSearch(1) })
     },
-    [onCommitSearch, setSearchParams],
+    [onCommitSearch, navigate],
   )
 
+  const openDetails = useCallback(
+    (id: number) => {
+      navigate({
+        pathname: '/details',
+        search: buildListSearch(page, String(id)),
+      })
+    },
+    [navigate, page],
+  )
+
+  const closeDetails = useCallback(() => {
+    navigate({ pathname: '/', search: buildListSearch(page) })
+  }, [navigate, page])
+
+  const handleMainPanelClick = (event: MouseEvent<HTMLElement>) => {
+    if (!showDetailsPanel) {
+      return
+    }
+    const target = event.target
+    if (!(target instanceof HTMLElement)) {
+      return
+    }
+    if (target.closest('.pokemon-card, .pagination, .search-controls, .details-panel')) {
+      return
+    }
+    closeDetails()
+  }
+
   return (
-    <main className="main-page">
+    <main className="main-page" onClick={handleMainPanelClick}>
       <Header />
 
       <section className="search-area">
@@ -39,7 +85,22 @@ export default function Layout({ committedQuery, onCommitSearch }: Props) {
         <Search committedQuery={committedQuery} onCommittedSearch={commitSearch} />
       </section>
 
-      <Result key={`${committedQuery}-${page}`} query={committedQuery} />
+      <div className={`master-detail${showDetailsPanel ? ' master-detail--split' : ''}`}>
+        <section className="results-area results-area--list">
+          <Result
+            key={`${committedQuery}-${page}`}
+            query={committedQuery}
+            selectedId={showDetailsPanel ? selectedId : null}
+            onSelectPokemon={openDetails}
+          />
+        </section>
+
+        {showDetailsPanel && (
+          <section className="results-area results-area--details">
+            <Outlet />
+          </section>
+        )}
+      </div>
 
       <div className="debug-error-row">
         <ErrorThrower />

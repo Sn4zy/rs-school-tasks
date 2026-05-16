@@ -21,6 +21,13 @@ function sampleItems(count: number): PokemonDetails[] {
   }))
 }
 
+function renderResult(query = '') {
+  return renderWithSearchParams(
+    <Result query={query} selectedId={null} onSelectPokemon={vi.fn()} />,
+    ['/?page=1'],
+  )
+}
+
 describe('Result', () => {
   beforeEach(() => {
     searchPokemonMock.mockReset()
@@ -31,7 +38,7 @@ describe('Result', () => {
       const items = sampleItems(3)
       searchPokemonMock.mockResolvedValue(items)
 
-      renderWithSearchParams(<Result query="" />, ['/?page=1'])
+      renderResult()
 
       expect(await screen.findAllByRole('article')).toHaveLength(3)
     })
@@ -39,7 +46,7 @@ describe('Result', () => {
     it('displays "no results" message when data array is empty', async () => {
       searchPokemonMock.mockResolvedValue([])
 
-      renderWithSearchParams(<Result query="" />, ['/?page=1'])
+      renderResult()
 
       expect(await screen.findByText('No items found.')).toBeInTheDocument()
     })
@@ -51,7 +58,7 @@ describe('Result', () => {
       })
       searchPokemonMock.mockReturnValue(pending)
 
-      renderWithSearchParams(<Result query="" />, ['/?page=1'])
+      renderResult()
 
       expect(screen.getByText('Loading…')).toBeInTheDocument()
 
@@ -80,7 +87,7 @@ describe('Result', () => {
         },
       ])
 
-      renderWithSearchParams(<Result query="" />, ['/?page=1'])
+      renderResult()
 
       const articles = await screen.findAllByRole('article')
       expect(articles).toHaveLength(2)
@@ -104,7 +111,7 @@ describe('Result', () => {
         },
       ])
 
-      renderWithSearchParams(<Result query="" />, ['/?page=1'])
+      renderResult()
 
       const article = await screen.findByRole('article')
       expect(within(article).getByRole('heading', { level: 3 })).toHaveTextContent('')
@@ -116,7 +123,7 @@ describe('Result', () => {
     it('displays error message when API call fails', async () => {
       searchPokemonMock.mockRejectedValue(new Error('Network failure'))
 
-      renderWithSearchParams(<Result query="" />, ['/?page=1'])
+      renderResult()
 
       expect(await screen.findByText('Network failure')).toBeInTheDocument()
     })
@@ -126,7 +133,7 @@ describe('Result', () => {
         new Error('Failed to fetch Pokemon details: Not Found'),
       )
 
-      renderWithSearchParams(<Result query="missingmon" />, ['/?page=1'])
+      renderResult('missingmon')
 
       expect(await screen.findByText('Failed to fetch Pokemon details: Not Found')).toBeInTheDocument()
     })
@@ -136,7 +143,7 @@ describe('Result', () => {
         new Error('Failed to fetch Pokemon list: Internal Server Error'),
       )
 
-      renderWithSearchParams(<Result query="" />, ['/?page=1'])
+      renderResult()
 
       expect(
         await screen.findByText('Failed to fetch Pokemon list: Internal Server Error'),
@@ -146,7 +153,7 @@ describe('Result', () => {
     it('displays fallback message when rejection is not an Error instance', async () => {
       searchPokemonMock.mockRejectedValue('weird')
 
-      renderWithSearchParams(<Result query="" />, ['/?page=1'])
+      renderResult()
 
       expect(await screen.findByText('Could not load data.')).toBeInTheDocument()
     })

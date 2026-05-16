@@ -9,13 +9,15 @@ import Loading from './Loading.tsx'
 
 interface Props {
   query?: string
+  selectedId: number | null
+  onSelectPokemon: (id: number) => void
 }
 
 function trim(value: string | undefined) {
   return (value ?? '').trim()
 }
 
-export default function Result({ query }: Props) {
+export default function Result({ query, selectedId, onSelectPokemon }: Props) {
   const [searchParams, setSearchParams] = useSearchParams()
   const page = parsePageParam(searchParams.get('page'))
 
@@ -49,13 +51,18 @@ export default function Result({ query }: Props) {
   }, [normalizedQuery, page])
 
   const goToPage = (nextPage: number) => {
-    setSearchParams({ page: String(nextPage) })
+    const nextParams: Record<string, string> = { page: String(nextPage) }
+    const details = searchParams.get('details')
+    if (details) {
+      nextParams.details = details
+    }
+    setSearchParams(nextParams)
   }
 
   const showPagination = pagingOn && !loading && !error
 
   return (
-    <section className="results-area">
+    <>
       <h2 className="results-heading">Results</h2>
 
       {showPagination && (
@@ -77,8 +84,8 @@ export default function Result({ query }: Props) {
       ) : items.length === 0 ? (
         <p className="no-results">No items found.</p>
       ) : (
-        <CardList items={items} />
+        <CardList items={items} selectedId={selectedId} onSelectPokemon={onSelectPokemon} />
       )}
-    </section>
+    </>
   )
 }

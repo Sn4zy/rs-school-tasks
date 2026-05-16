@@ -83,6 +83,7 @@ describe('Pagination with URL sync', () => {
     await user.click(screen.getByRole('button', { name: /^search$/i }))
 
     await waitFor(() => {
+      expect(router.state.location.pathname).toBe('/')
       expect(router.state.location.search).toBe('?page=1')
       expect(searchPokemonMock).toHaveBeenCalledWith('pikachu', 1)
     })

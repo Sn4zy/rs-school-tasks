@@ -2,35 +2,24 @@ import { render, type RenderOptions, type RenderResult } from '@testing-library/
 import type { ReactElement } from 'react'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 
-import { AppContent } from '../App.tsx'
 import ErrorBoundary from '../components/errorBoundary.tsx'
+import { routes } from '../router.tsx'
 
 type RenderWithRouterResult = RenderResult & {
   router: ReturnType<typeof createMemoryRouter>
-}
-
-function createTestRouter(initialEntries: string[]) {
-  return createMemoryRouter(
-    [
-      {
-        path: '*',
-        element: (
-          <ErrorBoundary>
-            <AppContent />
-          </ErrorBoundary>
-        ),
-      },
-    ],
-    { initialEntries },
-  )
 }
 
 export function renderApp(
   initialEntries: string[] = ['/?page=1'],
   options?: Omit<RenderOptions, 'wrapper'>,
 ): RenderWithRouterResult {
-  const router = createTestRouter(initialEntries)
-  const view = render(<RouterProvider router={router} />, options)
+  const router = createMemoryRouter(routes, { initialEntries })
+  const view = render(
+    <ErrorBoundary>
+      <RouterProvider router={router} />
+    </ErrorBoundary>,
+    options,
+  )
   return { router, ...view }
 }
 
