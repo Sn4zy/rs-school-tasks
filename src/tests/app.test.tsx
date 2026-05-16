@@ -1,9 +1,9 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
 import type { PokemonDetails } from '../../types/index.ts'
-import App from '../App.tsx'
 import { SEARCH_STORAGE_KEY } from '../utils/searchStorage.ts'
+import { renderApp } from './testUtils.tsx'
 
 const { searchPokemonMock } = vi.hoisted(() => ({
   searchPokemonMock: vi.fn(),
@@ -31,7 +31,7 @@ describe('App (integration)', () => {
   it('makes initial API call on component mount', async () => {
     searchPokemonMock.mockResolvedValue([])
 
-    render(<App />)
+    renderApp(['/?page=1'])
 
     await waitFor(() => {
       expect(searchPokemonMock).toHaveBeenCalledWith('', 1)
@@ -42,12 +42,10 @@ describe('App (integration)', () => {
     localStorage.setItem(SEARCH_STORAGE_KEY, 'pikachu')
     searchPokemonMock.mockResolvedValue(sampleItems(1))
 
-    render(<App />)
+    renderApp(['/?page=1'])
 
-    // Search input is populated from storage by Search component.
     expect(await screen.findByRole('textbox', { name: /pokémon name/i })).toHaveValue('pikachu')
 
-    // Result is driven by App's committedQuery (initialized from storage).
     await waitFor(() => {
       expect(searchPokemonMock).toHaveBeenCalledWith('pikachu', 1)
     })
@@ -60,31 +58,34 @@ describe('App (integration)', () => {
     })
     searchPokemonMock.mockReturnValue(pending)
 
-    render(<App />)
+    renderApp(['/?page=1'])
 
     expect(screen.getByText('Loading…')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /next/i })).not.toBeInTheDocument()
 
     resolveList(sampleItems(2))
 
     expect(await screen.findAllByRole('article')).toHaveLength(2)
     expect(screen.queryByText('Loading…')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /next/i })).toBeInTheDocument()
   })
 
   it('handles API error responses (shows error panel)', async () => {
     searchPokemonMock.mockRejectedValue(new Error('Network error'))
 
-    render(<App />)
+    renderApp(['/?page=1'])
 
     expect(await screen.findByText('Network error')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /next/i })).not.toBeInTheDocument()
   })
 
   it('calls API with correct parameters and manages search term state when user searches', async () => {
     const user = userEvent.setup()
 
-    searchPokemonMock.mockResolvedValueOnce([]) // initial mount, query ''
-    searchPokemonMock.mockResolvedValueOnce(sampleItems(1)) // after user search
+    searchPokemonMock.mockResolvedValueOnce([])
+    searchPokemonMock.mockResolvedValueOnce(sampleItems(1))
 
-    render(<App />)
+    const { router } = renderApp(['/?page=1'])
 
     await waitFor(() => {
       expect(searchPokemonMock).toHaveBeenCalledWith('', 1)
@@ -94,13 +95,11 @@ describe('App (integration)', () => {
     await user.type(input, '  eevee  ')
     await user.click(screen.getByRole('button', { name: /^search$/i }))
 
-    // App state updates -> Result props change -> new API call.
     await waitFor(() => {
       expect(searchPokemonMock).toHaveBeenCalledWith('eevee', 1)
     })
 
-    // Successful API response updates what the App renders (cards appear).
     expect(await screen.findAllByRole('article')).toHaveLength(1)
+    expect(router.state.location.search).toBe('?page=1')
   })
 })
-

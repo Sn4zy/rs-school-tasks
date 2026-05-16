@@ -1,7 +1,9 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 
 import { searchPokemon } from '../../api/pokemon.ts'
 import type { PokemonDetails } from '../../types/index.ts'
+import { parsePageParam } from '../utils/urlParams.ts'
 import CardList from './cardList.tsx'
 import Loading from './Loading.tsx'
 
@@ -14,10 +16,12 @@ function trim(value: string | undefined) {
 }
 
 export default function Result({ query }: Props) {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const page = parsePageParam(searchParams.get('page'))
+
   const [items, setItems] = useState<PokemonDetails[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [page, setPage] = useState(1)
 
   const normalizedQuery = trim(query)
   const pagingOn = normalizedQuery === ''
@@ -25,11 +29,10 @@ export default function Result({ query }: Props) {
   useEffect(() => {
     let cancelled = false
 
-    searchPokemon(normalizedQuery, 1)
+    searchPokemon(normalizedQuery, page)
       .then((data) => {
         if (!cancelled) {
           setItems(data)
-          setPage(1)
           setLoading(false)
         }
       })
@@ -43,42 +46,25 @@ export default function Result({ query }: Props) {
     return () => {
       cancelled = true
     }
-  }, [normalizedQuery])
+  }, [normalizedQuery, page])
 
-  const loadPage = useCallback(
-    (nextPage: number) => {
-      setLoading(true)
-      setError(null)
-      setPage(nextPage)
+  const goToPage = (nextPage: number) => {
+    setSearchParams({ page: String(nextPage) })
+  }
 
-      searchPokemon(normalizedQuery, nextPage)
-        .then((data) => {
-          setItems(data)
-          setLoading(false)
-        })
-        .catch((err: unknown) => {
-          setLoading(false)
-          setError(err instanceof Error ? err.message : 'Could not load data.')
-        })
-    },
-    [normalizedQuery],
-  )
+  const showPagination = pagingOn && !loading && !error
 
   return (
     <section className="results-area">
       <h2 className="results-heading">Results</h2>
 
-      {pagingOn && (
+      {showPagination && (
         <div className="pagination">
-          <button
-            type="button"
-            disabled={loading || page <= 1}
-            onClick={() => loadPage(page - 1)}
-          >
+          <button type="button" disabled={page <= 1} onClick={() => goToPage(page - 1)}>
             Previous
           </button>
           <span className="page-number">Page {page}</span>
-          <button type="button" disabled={loading} onClick={() => loadPage(page + 1)}>
+          <button type="button" onClick={() => goToPage(page + 1)}>
             Next
           </button>
         </div>
