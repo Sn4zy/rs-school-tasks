@@ -1,87 +1,98 @@
-import { Component } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+
+import { searchPokemon } from '../../api/pokemon.ts'
 import type { PokemonDetails } from '../../types/index.ts'
 import CardList from './cardList.tsx'
 import Loading from './Loading.tsx'
-import { searchPokemon } from '../../api/pokemon.ts'
 
 interface Props {
   query?: string
-}
-
-interface State {
-  items: PokemonDetails[]
-  loading: boolean
-  error: string | null
-  page: number
 }
 
 function trim(value: string | undefined) {
   return (value ?? '').trim()
 }
 
-class Result extends Component<Props, State> {
-  state: State = {
-    items: [],
-    loading: true,
-    error: null,
-    page: 1,
-  }
+export default function Result({ query }: Props) {
+  const [items, setItems] = useState<PokemonDetails[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
 
-  componentDidMount() {
-    this.loadData(1)
-  }
+  const normalizedQuery = trim(query)
+  const pagingOn = normalizedQuery === ''
 
-  componentDidUpdate(prevProps: Props) {
-    if (trim(prevProps.query) !== trim(this.props.query)) {
-      this.loadData(1)
+  useEffect(() => {
+    let cancelled = false
+
+    searchPokemon(normalizedQuery, 1)
+      .then((data) => {
+        if (!cancelled) {
+          setItems(data)
+          setPage(1)
+          setLoading(false)
+        }
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          setLoading(false)
+          setError(err instanceof Error ? err.message : 'Could not load data.')
+        }
+      })
+
+    return () => {
+      cancelled = true
     }
-  }
+  }, [normalizedQuery])
 
-  loadData(page: number) {
-    this.setState({ loading: true, error: null, page })
+  const loadPage = useCallback(
+    (nextPage: number) => {
+      setLoading(true)
+      setError(null)
+      setPage(nextPage)
 
-    searchPokemon(trim(this.props.query), page)
-      .then((items) => this.setState({ items, loading: false }))
-      .catch((err: unknown) =>
-        this.setState({
-          loading: false,
-          error: err instanceof Error ? err.message : 'Could not load data.',
-        }),
-      )
-  }
+      searchPokemon(normalizedQuery, nextPage)
+        .then((data) => {
+          setItems(data)
+          setLoading(false)
+        })
+        .catch((err: unknown) => {
+          setLoading(false)
+          setError(err instanceof Error ? err.message : 'Could not load data.')
+        })
+    },
+    [normalizedQuery],
+  )
 
-  render() {
-    const { items, loading, error, page } = this.state
-    const pagingOn = trim(this.props.query) === ''
+  return (
+    <section className="results-area">
+      <h2 className="results-heading">Results</h2>
 
-    return (
-      <section className="results-area">
-        <h2 className="results-heading">Results</h2>
+      {pagingOn && (
+        <div className="pagination">
+          <button
+            type="button"
+            disabled={loading || page <= 1}
+            onClick={() => loadPage(page - 1)}
+          >
+            Previous
+          </button>
+          <span className="page-number">Page {page}</span>
+          <button type="button" disabled={loading} onClick={() => loadPage(page + 1)}>
+            Next
+          </button>
+        </div>
+      )}
 
-        {pagingOn && (
-          <div className="pagination">
-            <button type="button" disabled={loading || page <= 1} onClick={() => this.loadData(page - 1)}>
-              Previous
-            </button>
-            <span className="page-number">Page {page}</span>
-            <button type="button" disabled={loading} onClick={() => this.loadData(page + 1)}>
-              Next
-            </button>
-          </div>
-        )}
-
-        {loading ? (
-          <Loading />
-        ) : error ? (
-          <div className="error-panel">{error}</div>
-        ) : items.length === 0 ? (
-          <p className="no-results">No items found.</p>
-        ) : (
-          <CardList items={items} />
-        )}
-      </section>
-    )
-  }
+      {loading ? (
+        <Loading />
+      ) : error ? (
+        <div className="error-panel">{error}</div>
+      ) : items.length === 0 ? (
+        <p className="no-results">No items found.</p>
+      ) : (
+        <CardList items={items} />
+      )}
+    </section>
+  )
 }
-
-export default Result
