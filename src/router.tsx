@@ -1,6 +1,7 @@
 import { createBrowserRouter, type RouteObject } from 'react-router-dom'
 
 import PokemonDetailsPanel from './components/pokemonDetailsPanel.tsx'
+import AboutPage from './pages/AboutPage.tsx'
 import HomePage from './pages/HomePage.tsx'
 
 export const routes: RouteObject[] = [
@@ -13,6 +14,10 @@ export const routes: RouteObject[] = [
         element: <PokemonDetailsPanel />,
       },
     ],
+  },
+  {
+    path: '/about',
+    element: <AboutPage />,
   },
 ]
 

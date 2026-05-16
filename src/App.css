@@ -506,3 +506,62 @@
   font-size: 0.9rem;
   opacity: 0.85;
 }
+
+.app-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.app-header h1 {
+  margin: 0;
+}
+
+.app-nav {
+  display: flex;
+  gap: 1rem;
+}
+
+.nav-link {
+  color: var(--text-h);
+  text-decoration: none;
+  padding: 0.35rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid transparent;
+}
+
+.nav-link:hover {
+  border-color: var(--accent-border);
+}
+
+.nav-link.active {
+  background: var(--accent-bg);
+  border-color: var(--accent-border);
+}
+
+.about-page {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 0 1.25rem 2.5rem;
+  text-align: left;
+}
+
+.about-content {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  background: var(--social-bg);
+}
+
+.about-content h2 {
+  margin-top: 0;
+}
+
+.about-course-link {
+  color: var(--accent);
+  font-weight: 500;
+}
