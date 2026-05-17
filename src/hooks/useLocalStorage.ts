@@ -16,10 +16,10 @@ export function useLocalStorage(
     (value: string) => {
       try {
         localStorage.setItem(key, value)
-        setStoredValue(value)
       } catch {
-        // ignore localStorage failures (private mode / quota)
+        // localStorage may be unavailable (private mode, quota, etc.)
       }
+      setStoredValue(value)
     },
     [key],
   )
