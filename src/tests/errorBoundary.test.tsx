@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 
 import ErrorBoundary from '../components/errorBoundary.tsx'
 import ErrorThrower from '../components/errorThrower.tsx'
+import { renderApp } from './testUtils.tsx'
 
 function Boom(): never {
   throw new Error('Boom')
@@ -69,6 +70,21 @@ describe('ErrorBoundary', () => {
 
       await user.click(screen.getByRole('button', { name: /trigger error/i }))
       expect(screen.getByText('Something went wrong')).toBeInTheDocument()
+    } finally {
+      consoleError.mockRestore()
+    }
+  })
+
+  it('shows route error fallback when a page throws inside the router', async () => {
+    const user = userEvent.setup()
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+    try {
+      renderApp(['/?page=1'])
+
+      await user.click(screen.getByRole('button', { name: /trigger error/i }))
+
+      expect(screen.getByText('Something went wrong')).toBeInTheDocument()
+      expect(screen.getByRole('link', { name: /back to pokedex/i })).toBeInTheDocument()
     } finally {
       consoleError.mockRestore()
     }

@@ -407,6 +407,14 @@
   box-sizing: border-box;
 }
 
+.error-boundary-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  text-align: center;
+}
+
 .error-boundary-message {
   margin: 0;
   font-size: 1.25rem;
