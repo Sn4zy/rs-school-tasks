@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 
 import { useLocalStorage } from '../hooks/useLocalStorage.ts'
+import '../styles/search.css'
 import { SEARCH_STORAGE_KEY } from '../utils/searchStorage.ts'
 
 interface Props {

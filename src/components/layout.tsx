@@ -2,8 +2,8 @@ import { useCallback, useEffect, type MouseEvent } from 'react'
 import { Outlet, useMatch, useNavigate, useSearchParams } from 'react-router-dom'
 
 import { buildListSearch, parsePageParam } from '../utils/urlParams.ts'
+import '../styles/layout.css'
 import ErrorThrower from './errorThrower.tsx'
-import Header from './header.tsx'
 import Result from './result.tsx'
 import Search from './search.tsx'
 
@@ -78,8 +78,6 @@ export default function Layout({ committedQuery, onCommitSearch }: Props) {
 
   return (
     <main className="main-page" onClick={handleMainPanelClick}>
-      <Header />
-
       <section className="search-area">
         <h2 className="search-area-heading">Search</h2>
         <Search committedQuery={committedQuery} onCommittedSearch={commitSearch} />

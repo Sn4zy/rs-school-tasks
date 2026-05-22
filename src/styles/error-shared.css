@@ -1,0 +1,30 @@
+.error-boundary-root {
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: 2rem;
+  box-sizing: border-box;
+}
+
+.error-boundary-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  text-align: center;
+}
+
+.error-boundary-message {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--text-h);
+}
+
+.error-panel {
+  padding: 1rem;
+  border-radius: 10px;
+  text-align: center;
+  border: 1px solid rgba(198, 40, 40, 0.35);
+  background: rgba(198, 40, 40, 0.1);
+  color: var(--text-h);
+}

@@ -85,6 +85,7 @@ describe('ErrorBoundary', () => {
 
       expect(screen.getByText('Something went wrong')).toBeInTheDocument()
       expect(screen.getByRole('link', { name: /back to pokedex/i })).toBeInTheDocument()
+      expect(screen.getByRole('navigation', { name: /main navigation/i })).toBeInTheDocument()
     } finally {
       consoleError.mockRestore()
     }

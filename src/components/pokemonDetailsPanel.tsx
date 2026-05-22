@@ -4,6 +4,9 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { fetchPokemonDetails } from '../../api/pokemon.ts'
 import type { PokemonDetails } from '../../types/index.ts'
 import { buildListSearch, parsePageParam } from '../utils/urlParams.ts'
+import '../styles/card.css'
+import '../styles/error-shared.css'
+import '../styles/pokemonDetailsPanel.css'
 import Loading from './Loading.tsx'
 
 interface ContentProps {

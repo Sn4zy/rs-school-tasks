@@ -1,6 +1,5 @@
 import { RouterProvider } from 'react-router-dom'
 
-import './App.css'
 import ErrorBoundary from './components/errorBoundary.tsx'
 import { router } from './router.tsx'
 

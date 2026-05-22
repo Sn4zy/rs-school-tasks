@@ -1,12 +1,11 @@
 import { Link } from 'react-router-dom'
 
-import Header from '../components/header.tsx'
+import '../styles/nav.css'
+import '../styles/notFoundPage.css'
 
 export default function NotFoundPage() {
   return (
     <main className="not-found-page">
-      <Header />
-
       <section className="not-found-content">
         <h2>404 — Page not found</h2>
         <p>The page you are looking for does not exist or has been moved.</p>

@@ -1,14 +1,13 @@
 import { Link } from 'react-router-dom'
 
-import Header from '../components/header.tsx'
+import '../styles/aboutPage.css'
+import '../styles/nav.css'
 
 export default function AboutPage() {
   return (
     <main className="about-page">
-      <Header />
-
       <section className="about-content">
-        <h2>Author</h2>
+        <h2>Author: Sn4zy</h2>
         <p>
           This Pokedex application was built as part of the RS School React course. It lets you
           browse and search Pokémon using the public PokeAPI.

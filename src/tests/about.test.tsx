@@ -24,7 +24,7 @@ describe('About page', () => {
     await user.click(screen.getByRole('link', { name: /^about$/i }))
 
     expect(router.state.location.pathname).toBe('/about')
-    expect(screen.getByRole('heading', { name: /^author$/i, level: 2 })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /author/i, level: 2 })).toBeInTheDocument()
   })
 
   it('shows author information and a link to the RS School React course', async () => {

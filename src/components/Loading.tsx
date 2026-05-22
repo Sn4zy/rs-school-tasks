@@ -1,3 +1,5 @@
+import '../styles/Loading.css'
+
 interface Props {
   label?: string
 }

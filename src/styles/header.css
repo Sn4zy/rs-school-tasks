@@ -1,0 +1,17 @@
+.app-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 100px 1.25rem 50px;
+}
+
+.app-header h1 {
+  margin: 0;
+}
+
+.app-nav {
+  display: flex;
+  gap: 1rem;
+}

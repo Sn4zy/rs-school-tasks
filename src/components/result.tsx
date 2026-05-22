@@ -4,6 +4,8 @@ import { useSearchParams } from 'react-router-dom'
 import { searchPokemon } from '../../api/pokemon.ts'
 import type { PokemonDetails } from '../../types/index.ts'
 import { parsePageParam } from '../utils/urlParams.ts'
+import '../styles/error-shared.css'
+import '../styles/result.css'
 import CardList from './cardList.tsx'
 import Loading from './Loading.tsx'
 

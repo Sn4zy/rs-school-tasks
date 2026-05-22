@@ -1,5 +1,7 @@
 import { useState } from 'react'
 
+import '../styles/errorThrower.css'
+
 export default function ErrorThrower() {
   const [shouldCrash, setShouldCrash] = useState(false)
 

@@ -1,5 +1,7 @@
 import type { PokemonDetails } from '../../types/index.ts'
 
+import '../styles/card.css'
+
 type Props = {
   pokemon: PokemonDetails
   selected: boolean
