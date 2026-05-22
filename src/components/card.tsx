@@ -1,21 +1,33 @@
-import { Component } from 'react'
 import type { PokemonDetails } from '../../types/index.ts'
 
-type Props = { pokemon: PokemonDetails }
+import '../styles/card.css'
 
-class Card extends Component<Props> {
-  render() {
-    const { name, sprite, flavorText } = this.props.pokemon
-    const spriteSrc = sprite.trim() !== '' ? sprite : undefined
-
-    return (
-      <article className="pokemon-card">
-        <img className="pokemon-sprite" src={spriteSrc} alt="" />
-        <h3 className="pokemon-name">{name}</h3>
-        <p className="pokemon-description">{flavorText}</p>
-      </article>
-    )
-  }
+type Props = {
+  pokemon: PokemonDetails
+  selected: boolean
+  onSelect: () => void
 }
 
-export default Card
+export default function Card({ pokemon, selected, onSelect }: Props) {
+  const { name, sprite, flavorText } = pokemon
+  const spriteSrc = sprite.trim() !== '' ? sprite : undefined
+
+  return (
+    <article
+      className={`pokemon-card${selected ? ' pokemon-card--selected' : ''}`}
+      onClick={onSelect}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          onSelect()
+        }
+      }}
+      tabIndex={0}
+      aria-pressed={selected}
+    >
+      <img className="pokemon-sprite" src={spriteSrc} alt="" />
+      <h3 className="pokemon-name">{name}</h3>
+      <p className="pokemon-description">{flavorText}</p>
+    </article>
+  )
+}

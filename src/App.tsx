@@ -1,31 +1,12 @@
-import { Component } from 'react'
-import './App.css'
+import { RouterProvider } from 'react-router-dom'
+
 import ErrorBoundary from './components/errorBoundary.tsx'
-import Layout from './components/layout.tsx'
-import { readStoredSearch } from './utils/searchStorage.ts'
+import { router } from './router.tsx'
 
-interface AppState {
-  committedQuery: string
+export default function App() {
+  return (
+    <ErrorBoundary>
+      <RouterProvider router={router} />
+    </ErrorBoundary>
+  )
 }
-
-class App extends Component<Record<string, never>, AppState> {
-  state: AppState = {
-    committedQuery: readStoredSearch(),
-  }
-
-  commitSearch = (trimmed: string) => {
-    this.setState({ committedQuery: trimmed })
-  }
-
-  render() {
-    const { committedQuery } = this.state
-
-    return (
-      <ErrorBoundary>
-        <Layout committedQuery={committedQuery} onCommitSearch={this.commitSearch} />
-      </ErrorBoundary>
-    )
-  }
-}
-
-export default App

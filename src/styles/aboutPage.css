@@ -1,0 +1,24 @@
+.about-page {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 0 1.25rem 2.5rem;
+  text-align: left;
+}
+
+.about-content {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  background: var(--social-bg);
+}
+
+.about-content h2 {
+  margin-top: 0;
+}
+
+.about-course-link {
+  color: var(--accent);
+  font-weight: 500;
+}

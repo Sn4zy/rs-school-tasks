@@ -1,5 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
 
+import '../styles/error-shared.css'
+
 interface Props {
   children: ReactNode
 }

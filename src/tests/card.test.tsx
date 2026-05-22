@@ -14,6 +14,8 @@ describe('Card', () => {
             sprite: 'https://example.com/pikachu.png',
             flavorText: 'It stores electricity in its cheeks.',
           }}
+          selected={false}
+          onSelect={() => {}}
         />,
       )
 
@@ -36,7 +38,9 @@ describe('Card', () => {
         flavorText: '',
       }
 
-      const { container } = render(<Card pokemon={pokemonWithEmptyFields} />)
+      const { container } = render(
+        <Card pokemon={pokemonWithEmptyFields} selected={false} onSelect={() => {}} />,
+      )
 
       expect(screen.getByRole('heading', { level: 3 })).toHaveTextContent('')
       expect(screen.getByRole('paragraph')).toHaveTextContent('')
