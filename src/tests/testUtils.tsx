@@ -4,7 +4,6 @@ import { Provider } from 'react-redux'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 
 import ErrorBoundary from '../components/errorBoundary.tsx'
-import AppProviders from '../providers/appProviders.tsx'
 import { routes } from '../router.tsx'
 import { setupStore, type AppStore, type RootState } from '../store/store.ts'
 
@@ -42,7 +41,7 @@ export function renderWithProviders(
 ): RenderResult & { store: AppStore } {
   const { preloadedState, store: providedStore, ...renderOptions } = options ?? {}
   const store = providedStore ?? setupStore(preloadedState)
-  const view = render(<AppProviders>{ui}</AppProviders>, renderOptions)
+  const view = render(<Provider store={store}>{ui}</Provider>, renderOptions)
   return { store, ...view }
 }
 

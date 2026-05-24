@@ -86,7 +86,11 @@ export default function Result({ query, selectedId, onSelectPokemon }: Props) {
       ) : items.length === 0 ? (
         <p className="no-results">No items found.</p>
       ) : (
-        <CardList items={items} selectedId={selectedId} onSelectPokemon={onSelectPokemon} />
+        <CardList
+          items={items}
+          detailsOpenId={selectedId}
+          onOpenDetails={onSelectPokemon}
+        />
       )}
     </>
   )
