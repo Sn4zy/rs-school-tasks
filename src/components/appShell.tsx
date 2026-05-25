@@ -2,6 +2,7 @@ import { Outlet } from 'react-router-dom'
 
 import '../styles/appShell.css'
 import Header from './header.tsx'
+import SelectedItemsFlyout from './selectedItemsFlyout.tsx'
 
 export default function AppShell() {
   return (
@@ -10,6 +11,7 @@ export default function AppShell() {
       <div className="app-content">
         <Outlet />
       </div>
+      <SelectedItemsFlyout />
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
+import { createSelector, createSlice, type PayloadAction } from '@reduxjs/toolkit'
 
 import type { PokemonDetails } from '../../types/index.ts'
 
@@ -37,8 +37,9 @@ type SelectedItemsRootState = { selectedItems: SelectedItemsState }
 
 export const selectSelectedItemsState = (state: SelectedItemsRootState) => state.selectedItems
 
-export const selectSelectedItems = (state: SelectedItemsRootState) =>
-  Object.values(state.selectedItems.itemsById)
+export const selectSelectedItems = createSelector([selectSelectedItemsState], (state) =>
+  Object.values(state.itemsById),
+)
 
 export const selectSelectedCount = (state: SelectedItemsRootState) =>
   Object.keys(state.selectedItems.itemsById).length
