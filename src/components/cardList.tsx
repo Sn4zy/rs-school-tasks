@@ -3,19 +3,19 @@ import Card from './card.tsx'
 
 type Props = {
   items: PokemonDetails[]
-  selectedId: number | null
-  onSelectPokemon: (id: number) => void
+  detailsOpenId: number | null
+  onOpenDetails: (id: number) => void
 }
 
-export default function CardList({ items, selectedId, onSelectPokemon }: Props) {
+export default function CardList({ items, detailsOpenId, onOpenDetails }: Props) {
   return (
     <div className="pokemon-cards">
       {items.map((pokemon) => (
         <Card
           key={pokemon.id}
           pokemon={pokemon}
-          selected={selectedId === pokemon.id}
-          onSelect={() => onSelectPokemon(pokemon.id)}
+          detailsOpenId={detailsOpenId}
+          onOpenDetails={onOpenDetails}
         />
       ))}
     </div>
