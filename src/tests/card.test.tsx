@@ -28,7 +28,7 @@ function renderCard(
     />,
     { store },
   )
-  return { store, ...view }
+  return { ...view, store }
 }
 
 describe('Card', () => {

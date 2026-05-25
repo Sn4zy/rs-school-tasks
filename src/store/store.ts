@@ -1,21 +1,23 @@
-import { configureStore } from '@reduxjs/toolkit'
+import { combineReducers, configureStore } from '@reduxjs/toolkit'
 
-import selectedItemsReducer, { type SelectedItemsState } from './selectedItemsSlice.ts'
+import selectedItemsReducer from './selectedItemsSlice.ts'
 
-export type RootState = {
-  selectedItems: SelectedItemsState
-}
+const rootReducer = combineReducers({
+  selectedItems: selectedItemsReducer,
+})
+
+export const store = configureStore({
+  reducer: rootReducer,
+})
+
+export type RootState = ReturnType<typeof rootReducer>
+export type AppDispatch = typeof store.dispatch
 
 export function setupStore(preloadedState?: Partial<RootState>) {
   return configureStore({
-    reducer: {
-      selectedItems: selectedItemsReducer,
-    },
+    reducer: rootReducer,
     preloadedState,
   })
 }
 
-export const store = setupStore()
-
 export type AppStore = ReturnType<typeof setupStore>
-export type AppDispatch = AppStore['dispatch']
