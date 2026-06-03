@@ -1,6 +1,12 @@
 import { useSearchParams } from 'react-router-dom'
 
-import { useSearchPokemonQuery } from '../api/pokemonApi.ts'
+import {
+  pokemonApi,
+  pokemonListCacheTag,
+  useSearchPokemonQuery,
+  type SearchPokemonArg,
+} from '../api/pokemonApi.ts'
+import { useAppDispatch } from '../store/hooks.ts'
 import { getReadableQueryError } from '../utils/rtkQueryError.ts'
 import { parsePageParam } from '../utils/urlParams.ts'
 import '../styles/error-shared.css'
@@ -19,16 +25,20 @@ function trim(value: string | undefined) {
 }
 
 export default function Result({ query, selectedId, onSelectPokemon }: Props) {
+  const dispatch = useAppDispatch()
   const [searchParams, setSearchParams] = useSearchParams()
   const page = parsePageParam(searchParams.get('page'))
 
   const normalizedQuery = trim(query)
   const pagingOn = normalizedQuery === ''
+  const searchArg: SearchPokemonArg = { query: normalizedQuery, page }
 
-  const { data: items, isLoading, isFetching, error } = useSearchPokemonQuery({
-    query: normalizedQuery,
-    page,
-  })
+  const { data: items, isLoading, isFetching, error, refetch } = useSearchPokemonQuery(searchArg)
+
+  const refreshResults = () => {
+    dispatch(pokemonApi.util.invalidateTags([pokemonListCacheTag(searchArg)]))
+    void refetch()
+  }
 
   const goToPage = (nextPage: number) => {
     const nextParams: Record<string, string> = { page: String(nextPage) }
@@ -46,7 +56,17 @@ export default function Result({ query, selectedId, onSelectPokemon }: Props) {
 
   return (
     <>
-      <h2 className="results-heading">Results</h2>
+      <div className="results-toolbar">
+        <h2 className="results-heading">Results</h2>
+        <button
+          type="button"
+          className="refresh-button"
+          aria-label="Refresh results"
+          onClick={refreshResults}
+        >
+          Refresh
+        </button>
+      </div>
 
       {showPagination && (
         <div className="pagination">

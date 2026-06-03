@@ -61,6 +61,22 @@ export type SearchPokemonArg = {
   page: number
 }
 
+export function normalizeSearchQuery(query: string): string {
+  return query.trim().toLowerCase()
+}
+
+export function pokemonListCacheTag(arg: SearchPokemonArg) {
+  const normalizedQuery = normalizeSearchQuery(arg.query)
+  return {
+    type: 'PokemonList' as const,
+    id: `page-${arg.page}-${normalizedQuery}`,
+  }
+}
+
+export function pokemonDetailsCacheTag(detailsId: string) {
+  return { type: 'PokemonDetails' as const, id: detailsId }
+}
+
 export const pokemonApi = createApi({
   reducerPath: 'pokemonApi',
   baseQuery,
@@ -109,16 +125,13 @@ export const pokemonApi = createApi({
         return { data: [detailResult.data] }
       },
       providesTags: (result, _error, arg) => {
-        const normalizedQuery = arg.query.trim().toLowerCase()
+        const listTag = pokemonListCacheTag(arg)
         if (!result) {
-          return [{ type: 'PokemonList' as const, id: `page-${arg.page}-${normalizedQuery}` }]
+          return [listTag]
         }
 
-        const itemTags = result.map((item) => ({ type: 'PokemonDetails' as const, id: item.id }))
-        return [
-          { type: 'PokemonList' as const, id: `page-${arg.page}-${normalizedQuery}` },
-          ...itemTags,
-        ]
+        const itemTags = result.map((item) => pokemonDetailsCacheTag(String(item.id)))
+        return [listTag, ...itemTags]
       },
     }),
     pokemonDetails: builder.query<PokemonDetails, string>({
@@ -134,9 +147,7 @@ export const pokemonApi = createApi({
         }
         return { data: detailsResult.data }
       },
-      providesTags: (_result, _error, detailsId) => [
-        { type: 'PokemonDetails' as const, id: detailsId },
-      ],
+      providesTags: (_result, _error, detailsId) => [pokemonDetailsCacheTag(detailsId)],
     }),
   }),
 })

@@ -1,6 +1,11 @@
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
-import { usePokemonDetailsQuery } from '../api/pokemonApi.ts'
+import {
+  pokemonApi,
+  pokemonDetailsCacheTag,
+  usePokemonDetailsQuery,
+} from '../api/pokemonApi.ts'
+import { useAppDispatch } from '../store/hooks.ts'
 import { getReadableQueryError } from '../utils/rtkQueryError.ts'
 import { buildListSearch, parsePageParam } from '../utils/urlParams.ts'
 import '../styles/card.css'
@@ -14,10 +19,17 @@ interface ContentProps {
 }
 
 function PokemonDetailsContent({ detailsId, page }: ContentProps) {
+  const dispatch = useAppDispatch()
   const navigate = useNavigate()
-  const { data: pokemon, isLoading, isFetching, error } = usePokemonDetailsQuery(detailsId)
+  const { data: pokemon, isLoading, isFetching, error, refetch } =
+    usePokemonDetailsQuery(detailsId)
   const isBusy = isLoading || isFetching
   const errorMessage = getReadableQueryError(error, 'Could not load details.')
+
+  const refreshDetails = () => {
+    dispatch(pokemonApi.util.invalidateTags([pokemonDetailsCacheTag(detailsId)]))
+    void refetch()
+  }
 
   const closeDetails = () => {
     navigate({ pathname: '/', search: buildListSearch(page) })
@@ -27,9 +39,19 @@ function PokemonDetailsContent({ detailsId, page }: ContentProps) {
     <aside className="details-panel" aria-label="Pokémon details">
       <div className="details-panel-header">
         <h2 className="details-panel-heading">Details</h2>
-        <button type="button" className="details-close-button" onClick={closeDetails}>
-          Close
-        </button>
+        <div className="details-panel-actions">
+          <button
+            type="button"
+            className="refresh-button"
+            aria-label="Refresh details"
+            onClick={refreshDetails}
+          >
+            Refresh
+          </button>
+          <button type="button" className="details-close-button" onClick={closeDetails}>
+            Close
+          </button>
+        </div>
       </div>
 
       {isBusy ? (
