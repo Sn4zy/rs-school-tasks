@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
-import { searchPokemon } from '../../api/pokemon.ts'
-import type { PokemonDetails } from '../../types/index.ts'
+import { useSearchPokemonQuery } from '../api/pokemonApi.ts'
+import { getReadableQueryError } from '../utils/rtkQueryError.ts'
 import { parsePageParam } from '../utils/urlParams.ts'
 import '../styles/error-shared.css'
 import '../styles/result.css'
@@ -23,34 +22,13 @@ export default function Result({ query, selectedId, onSelectPokemon }: Props) {
   const [searchParams, setSearchParams] = useSearchParams()
   const page = parsePageParam(searchParams.get('page'))
 
-  const [items, setItems] = useState<PokemonDetails[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
   const normalizedQuery = trim(query)
   const pagingOn = normalizedQuery === ''
 
-  useEffect(() => {
-    let cancelled = false
-
-    searchPokemon(normalizedQuery, page)
-      .then((data) => {
-        if (!cancelled) {
-          setItems(data)
-          setLoading(false)
-        }
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) {
-          setLoading(false)
-          setError(err instanceof Error ? err.message : 'Could not load data.')
-        }
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [normalizedQuery, page])
+  const { data: items, isLoading, isFetching, error } = useSearchPokemonQuery({
+    query: normalizedQuery,
+    page,
+  })
 
   const goToPage = (nextPage: number) => {
     const nextParams: Record<string, string> = { page: String(nextPage) }
@@ -61,7 +39,10 @@ export default function Result({ query, selectedId, onSelectPokemon }: Props) {
     setSearchParams(nextParams)
   }
 
-  const showPagination = pagingOn && !loading && !error
+  const isBusy = isLoading || isFetching
+  const errorMessage = getReadableQueryError(error, 'Could not load data.')
+
+  const showPagination = pagingOn && !isBusy && !errorMessage
 
   return (
     <>
@@ -79,11 +60,11 @@ export default function Result({ query, selectedId, onSelectPokemon }: Props) {
         </div>
       )}
 
-      {loading ? (
+      {isBusy ? (
         <Loading />
-      ) : error ? (
-        <div className="error-panel">{error}</div>
-      ) : items.length === 0 ? (
+      ) : errorMessage ? (
+        <div className="error-panel">{errorMessage}</div>
+      ) : !items || items.length === 0 ? (
         <p className="no-results">No items found.</p>
       ) : (
         <CardList

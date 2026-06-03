@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
-import { fetchPokemonDetails } from '../../api/pokemon.ts'
-import type { PokemonDetails } from '../../types/index.ts'
+import { usePokemonDetailsQuery } from '../api/pokemonApi.ts'
+import { getReadableQueryError } from '../utils/rtkQueryError.ts'
 import { buildListSearch, parsePageParam } from '../utils/urlParams.ts'
 import '../styles/card.css'
 import '../styles/error-shared.css'
@@ -16,31 +15,9 @@ interface ContentProps {
 
 function PokemonDetailsContent({ detailsId, page }: ContentProps) {
   const navigate = useNavigate()
-  const [pokemon, setPokemon] = useState<PokemonDetails | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    let cancelled = false
-
-    fetchPokemonDetails(detailsId)
-      .then((data) => {
-        if (!cancelled) {
-          setPokemon(data)
-          setLoading(false)
-        }
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) {
-          setLoading(false)
-          setError(err instanceof Error ? err.message : 'Could not load details.')
-        }
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [detailsId])
+  const { data: pokemon, isLoading, isFetching, error } = usePokemonDetailsQuery(detailsId)
+  const isBusy = isLoading || isFetching
+  const errorMessage = getReadableQueryError(error, 'Could not load details.')
 
   const closeDetails = () => {
     navigate({ pathname: '/', search: buildListSearch(page) })
@@ -55,10 +32,10 @@ function PokemonDetailsContent({ detailsId, page }: ContentProps) {
         </button>
       </div>
 
-      {loading ? (
+      {isBusy ? (
         <Loading label="Loading details…" />
-      ) : error ? (
-        <div className="error-panel">{error}</div>
+      ) : errorMessage ? (
+        <div className="error-panel">{errorMessage}</div>
       ) : pokemon ? (
         <article className="pokemon-card pokemon-card--detail">
           <img

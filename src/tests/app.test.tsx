@@ -2,16 +2,21 @@ import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
 import type { PokemonDetails } from '../../types/index.ts'
+import type { SearchPokemonArg } from '../api/pokemonApi.ts'
 import { SEARCH_STORAGE_KEY } from '../utils/searchStorage.ts'
 import { renderApp } from './testUtils.tsx'
 
-const { searchPokemonMock } = vi.hoisted(() => ({
-  searchPokemonMock: vi.fn(),
+const { useSearchPokemonQueryMock } = vi.hoisted(() => ({
+  useSearchPokemonQueryMock: vi.fn(),
 }))
 
-vi.mock('../../api/pokemon.ts', () => ({
-  searchPokemon: (query: string, page?: number) => searchPokemonMock(query, page),
-}))
+vi.mock('../api/pokemonApi.ts', async () => {
+  const actual = await vi.importActual<typeof import('../api/pokemonApi.ts')>('../api/pokemonApi.ts')
+  return {
+    ...actual,
+    useSearchPokemonQuery: (arg: SearchPokemonArg) => useSearchPokemonQueryMock(arg),
+  }
+})
 
 function sampleItems(count: number): PokemonDetails[] {
   return Array.from({ length: count }, (_, i) => ({
@@ -25,45 +30,65 @@ function sampleItems(count: number): PokemonDetails[] {
 describe('App (integration)', () => {
   beforeEach(() => {
     localStorage.clear()
-    searchPokemonMock.mockReset()
+    useSearchPokemonQueryMock.mockReset()
   })
 
   it('makes initial API call on component mount', async () => {
-    searchPokemonMock.mockResolvedValue([])
+    useSearchPokemonQueryMock.mockReturnValue({
+      data: [],
+      isLoading: false,
+      isFetching: false,
+      error: undefined,
+    })
 
     renderApp(['/?page=1'])
 
     await waitFor(() => {
-      expect(searchPokemonMock).toHaveBeenCalledWith('', 1)
+      expect(useSearchPokemonQueryMock).toHaveBeenCalledWith({ query: '', page: 1 })
     })
   })
 
   it('handles search term from localStorage on initial load', async () => {
     localStorage.setItem(SEARCH_STORAGE_KEY, 'pikachu')
-    searchPokemonMock.mockResolvedValue(sampleItems(1))
+    useSearchPokemonQueryMock.mockReturnValue({
+      data: sampleItems(1),
+      isLoading: false,
+      isFetching: false,
+      error: undefined,
+    })
 
     renderApp(['/?page=1'])
 
     expect(await screen.findByRole('textbox', { name: /pokémon name/i })).toHaveValue('pikachu')
 
     await waitFor(() => {
-      expect(searchPokemonMock).toHaveBeenCalledWith('pikachu', 1)
+      expect(useSearchPokemonQueryMock).toHaveBeenCalledWith({ query: 'pikachu', page: 1 })
     })
   })
 
-  it('manages loading states during API calls (loading → success)', async () => {
-    let resolveList!: (value: PokemonDetails[]) => void
-    const pending = new Promise<PokemonDetails[]>((resolve) => {
-      resolveList = resolve
+  it('shows loading state while data is being fetched', () => {
+    useSearchPokemonQueryMock.mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      isFetching: true,
+      error: undefined,
     })
-    searchPokemonMock.mockReturnValue(pending)
 
     renderApp(['/?page=1'])
 
     expect(screen.getByText('Loading…')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /next/i })).not.toBeInTheDocument()
+  })
 
-    resolveList(sampleItems(2))
+  it('shows results when data is loaded', async () => {
+    useSearchPokemonQueryMock.mockReturnValue({
+      data: sampleItems(2),
+      isLoading: false,
+      isFetching: false,
+      error: undefined,
+    })
+
+    renderApp(['/?page=1'])
 
     expect(await screen.findAllByRole('article')).toHaveLength(2)
     expect(screen.queryByText('Loading…')).not.toBeInTheDocument()
@@ -71,7 +96,12 @@ describe('App (integration)', () => {
   })
 
   it('handles API error responses (shows error panel)', async () => {
-    searchPokemonMock.mockRejectedValue(new Error('Network error'))
+    useSearchPokemonQueryMock.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isFetching: false,
+      error: { data: 'Network error' },
+    })
 
     renderApp(['/?page=1'])
 
@@ -82,22 +112,22 @@ describe('App (integration)', () => {
   it('calls API with correct parameters and manages search term state when user searches', async () => {
     const user = userEvent.setup()
 
-    searchPokemonMock.mockResolvedValueOnce([])
-    searchPokemonMock.mockResolvedValueOnce(sampleItems(1))
+    useSearchPokemonQueryMock.mockImplementation((arg: SearchPokemonArg) => ({
+      data: arg.query.trim() === '' ? [] : sampleItems(1),
+      isLoading: false,
+      isFetching: false,
+      error: undefined,
+    }))
 
     const { router } = renderApp(['/?page=1'])
 
-    await waitFor(() => {
-      expect(searchPokemonMock).toHaveBeenCalledWith('', 1)
-    })
+    expect(useSearchPokemonQueryMock).toHaveBeenCalledWith({ query: '', page: 1 })
 
     const input = screen.getByRole('textbox', { name: /pokémon name/i })
     await user.type(input, '  eevee  ')
     await user.click(screen.getByRole('button', { name: /^search$/i }))
 
-    await waitFor(() => {
-      expect(searchPokemonMock).toHaveBeenCalledWith('eevee', 1)
-    })
+    await waitFor(() => expect(useSearchPokemonQueryMock).toHaveBeenCalledWith({ query: 'eevee', page: 1 }))
 
     expect(await screen.findAllByRole('article')).toHaveLength(1)
     expect(router.state.location.search).toBe('?page=1')

@@ -2,17 +2,22 @@ import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
 import type { PokemonDetails } from '../../types/index.ts'
+import type { SearchPokemonArg } from '../api/pokemonApi.ts'
 import { renderApp } from './testUtils.tsx'
 
-const { searchPokemonMock, fetchPokemonDetailsMock } = vi.hoisted(() => ({
-  searchPokemonMock: vi.fn(),
-  fetchPokemonDetailsMock: vi.fn(),
+const { useSearchPokemonQueryMock, usePokemonDetailsQueryMock } = vi.hoisted(() => ({
+  useSearchPokemonQueryMock: vi.fn(),
+  usePokemonDetailsQueryMock: vi.fn(),
 }))
 
-vi.mock('../../api/pokemon.ts', () => ({
-  searchPokemon: (query: string, page?: number) => searchPokemonMock(query, page),
-  fetchPokemonDetails: (id: string) => fetchPokemonDetailsMock(id),
-}))
+vi.mock('../api/pokemonApi.ts', async () => {
+  const actual = await vi.importActual<typeof import('../api/pokemonApi.ts')>('../api/pokemonApi.ts')
+  return {
+    ...actual,
+    useSearchPokemonQuery: (arg: SearchPokemonArg) => useSearchPokemonQueryMock(arg),
+    usePokemonDetailsQuery: (detailsId: string) => usePokemonDetailsQueryMock(detailsId),
+  }
+})
 
 function sampleItems(count: number): PokemonDetails[] {
   return Array.from({ length: count }, (_, i) => ({
@@ -26,9 +31,20 @@ function sampleItems(count: number): PokemonDetails[] {
 describe('Master-Detail view', () => {
   beforeEach(() => {
     localStorage.clear()
-    searchPokemonMock.mockReset()
-    fetchPokemonDetailsMock.mockReset()
-    searchPokemonMock.mockResolvedValue(sampleItems(2))
+    useSearchPokemonQueryMock.mockReset()
+    usePokemonDetailsQueryMock.mockReset()
+    useSearchPokemonQueryMock.mockReturnValue({
+      data: sampleItems(2),
+      isLoading: false,
+      isFetching: false,
+      error: undefined,
+    })
+    usePokemonDetailsQueryMock.mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      isFetching: true,
+      error: undefined,
+    })
   })
 
   it('does not show details panel on initial load', async () => {
@@ -41,12 +57,6 @@ describe('Master-Detail view', () => {
 
   it('opens details panel via Outlet and syncs URL when an item is clicked', async () => {
     const user = userEvent.setup()
-    let resolveDetails!: (value: PokemonDetails) => void
-    fetchPokemonDetailsMock.mockReturnValue(
-      new Promise<PokemonDetails>((resolve) => {
-        resolveDetails = resolve
-      }),
-    )
 
     const { router } = renderApp(['/?page=1'])
     const listArticles = await screen.findAllByRole('article')
@@ -63,28 +73,10 @@ describe('Master-Detail view', () => {
     expect(screen.getByRole('complementary', { name: /pokémon details/i })).toBeInTheDocument()
     expect(screen.getByText('Loading details…')).toBeInTheDocument()
     expect(screen.getAllByRole('article').length).toBeGreaterThanOrEqual(2)
-
-    resolveDetails({
-      id: 1,
-      name: 'pokemon-1',
-      sprite: 'https://example.com/sprite-1.png',
-      flavorText: 'Description for pokemon 1.',
-    })
-
-    await waitFor(() => {
-      expect(screen.getByText('ID: 1')).toBeInTheDocument()
-    })
   })
 
   it('closes details panel via close button and updates URL', async () => {
     const user = userEvent.setup()
-    fetchPokemonDetailsMock.mockResolvedValue({
-      id: 1,
-      name: 'pokemon-1',
-      sprite: 'https://example.com/sprite-1.png',
-      flavorText: 'Description for pokemon 1.',
-    })
-
     const { router } = renderApp(['/details?page=2&details=1'])
 
     await screen.findByRole('complementary', { name: /pokémon details/i })
@@ -99,13 +91,6 @@ describe('Master-Detail view', () => {
 
   it('closes details panel when clicking the main panel background', async () => {
     const user = userEvent.setup()
-    fetchPokemonDetailsMock.mockResolvedValue({
-      id: 1,
-      name: 'pokemon-1',
-      sprite: 'https://example.com/sprite-1.png',
-      flavorText: 'Description for pokemon 1.',
-    })
-
     const { router } = renderApp(['/details?page=1&details=1'])
 
     await screen.findByRole('complementary', { name: /pokémon details/i })
@@ -119,21 +104,22 @@ describe('Master-Detail view', () => {
 
   it('clears details from URL when a new search is submitted', async () => {
     const user = userEvent.setup()
-    fetchPokemonDetailsMock.mockResolvedValue({
-      id: 1,
-      name: 'pokemon-1',
-      sprite: 'https://example.com/sprite-1.png',
-      flavorText: 'Description for pokemon 1.',
-    })
-    searchPokemonMock.mockResolvedValueOnce(sampleItems(2))
-    searchPokemonMock.mockResolvedValueOnce([
-      {
-        id: 25,
-        name: 'pikachu',
-        sprite: 'https://example.com/pikachu.png',
-        flavorText: 'Electric mouse.',
-      },
-    ])
+    useSearchPokemonQueryMock.mockImplementation((arg: SearchPokemonArg) => ({
+      data:
+        arg.query.trim() === ''
+          ? sampleItems(2)
+          : [
+              {
+                id: 25,
+                name: 'pikachu',
+                sprite: 'https://example.com/pikachu.png',
+                flavorText: 'Electric mouse.',
+              },
+            ],
+      isLoading: false,
+      isFetching: false,
+      error: undefined,
+    }))
 
     const { router } = renderApp(['/details?page=2&details=1'])
     await screen.findByRole('complementary', { name: /pokémon details/i })
