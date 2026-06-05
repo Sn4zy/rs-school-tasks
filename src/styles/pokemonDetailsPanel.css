@@ -12,9 +12,30 @@
   gap: 0.75rem;
 }
 
+.details-panel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .details-panel-heading {
   margin: 0;
   font-size: 1.125rem;
+}
+
+.refresh-button {
+  font: inherit;
+  cursor: pointer;
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-h);
+}
+
+.refresh-button:hover {
+  border-color: var(--accent-border);
 }
 
 .details-close-button {

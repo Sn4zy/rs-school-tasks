@@ -2,16 +2,26 @@ import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
 import type { PokemonDetails } from '../../types/index.ts'
+import type { SearchPokemonArg } from '../api/pokemonApi.ts'
 import { renderApp } from './testUtils.tsx'
 
-const { searchPokemonMock } = vi.hoisted(() => ({
-  searchPokemonMock: vi.fn(),
+const { useSearchPokemonQueryMock } = vi.hoisted(() => ({
+  useSearchPokemonQueryMock: vi.fn(),
 }))
 
-vi.mock('../../api/pokemon.ts', () => ({
-  searchPokemon: (query: string, page?: number) => searchPokemonMock(query, page),
-  fetchPokemonDetails: vi.fn(),
-}))
+vi.mock('../api/pokemonApi.ts', async () => {
+  const actual = await vi.importActual<typeof import('../api/pokemonApi.ts')>('../api/pokemonApi.ts')
+  return {
+    ...actual,
+    useSearchPokemonQuery: (arg: SearchPokemonArg) => useSearchPokemonQueryMock(arg),
+    usePokemonDetailsQuery: () => ({
+      data: undefined,
+      isLoading: true,
+      isFetching: true,
+      error: undefined,
+    }),
+  }
+})
 
 function sampleItems(count: number): PokemonDetails[] {
   return Array.from({ length: count }, (_, i) => ({
@@ -24,8 +34,13 @@ function sampleItems(count: number): PokemonDetails[] {
 
 describe('CSV download from flyout', () => {
   beforeEach(() => {
-    searchPokemonMock.mockReset()
-    searchPokemonMock.mockResolvedValue(sampleItems(3))
+    useSearchPokemonQueryMock.mockReset()
+    useSearchPokemonQueryMock.mockReturnValue({
+      data: sampleItems(3),
+      isLoading: false,
+      isFetching: false,
+      error: undefined,
+    })
   })
 
   it('generates a csv file with selected item details when Download is clicked', async () => {

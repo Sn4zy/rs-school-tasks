@@ -2,17 +2,27 @@ import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
 import type { PokemonDetails } from '../../types/index.ts'
+import type { SearchPokemonArg } from '../api/pokemonApi.ts'
 import { selectIsItemSelected, selectSelectedCount } from '../store/selectedItemsSlice.ts'
 import { renderApp } from './testUtils.tsx'
 
-const { searchPokemonMock } = vi.hoisted(() => ({
-  searchPokemonMock: vi.fn(),
+const { useSearchPokemonQueryMock } = vi.hoisted(() => ({
+  useSearchPokemonQueryMock: vi.fn(),
 }))
 
-vi.mock('../../api/pokemon.ts', () => ({
-  searchPokemon: (query: string, page?: number) => searchPokemonMock(query, page),
-  fetchPokemonDetails: vi.fn(),
-}))
+vi.mock('../api/pokemonApi.ts', async () => {
+  const actual = await vi.importActual<typeof import('../api/pokemonApi.ts')>('../api/pokemonApi.ts')
+  return {
+    ...actual,
+    useSearchPokemonQuery: (arg: SearchPokemonArg) => useSearchPokemonQueryMock(arg),
+    usePokemonDetailsQuery: () => ({
+      data: undefined,
+      isLoading: true,
+      isFetching: true,
+      error: undefined,
+    }),
+  }
+})
 
 function sampleItems(count: number, startId = 1): PokemonDetails[] {
   return Array.from({ length: count }, (_, i) => ({
@@ -25,8 +35,13 @@ function sampleItems(count: number, startId = 1): PokemonDetails[] {
 
 describe('Selected items management', () => {
   beforeEach(() => {
-    searchPokemonMock.mockReset()
-    searchPokemonMock.mockResolvedValue(sampleItems(2))
+    useSearchPokemonQueryMock.mockReset()
+    useSearchPokemonQueryMock.mockReturnValue({
+      data: sampleItems(2),
+      isLoading: false,
+      isFetching: false,
+      error: undefined,
+    })
   })
 
   it('renders a checkbox on each item', async () => {
@@ -109,8 +124,12 @@ describe('Selected items management', () => {
 
   it('persists selections across pagination', async () => {
     const user = userEvent.setup()
-    searchPokemonMock.mockResolvedValueOnce(sampleItems(2, 1))
-    searchPokemonMock.mockResolvedValueOnce(sampleItems(2, 3))
+    useSearchPokemonQueryMock.mockImplementation((arg: SearchPokemonArg) => ({
+      data: arg.page === 1 ? sampleItems(2, 1) : sampleItems(2, 3),
+      isLoading: false,
+      isFetching: false,
+      error: undefined,
+    }))
 
     const { store } = renderApp(['/?page=1'])
     let articles = await screen.findAllByRole('article')

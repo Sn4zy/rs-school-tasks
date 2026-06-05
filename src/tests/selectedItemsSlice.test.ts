@@ -78,9 +78,7 @@ describe('Redux store setup', () => {
     const store = setupStore()
     store.dispatch(toggleItem(bulbasaur))
 
-    expect(store.getState()).toEqual({
-      selectedItems: { itemsById: { 1: bulbasaur } },
-    })
+    expect(store.getState().selectedItems).toEqual({ itemsById: { 1: bulbasaur } })
   })
 
   it('accepts preloaded state for tests', () => {

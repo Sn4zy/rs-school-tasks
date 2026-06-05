@@ -1,8 +1,13 @@
-import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
-import { searchPokemon } from '../../api/pokemon.ts'
-import type { PokemonDetails } from '../../types/index.ts'
+import {
+  pokemonApi,
+  pokemonListCacheTag,
+  useSearchPokemonQuery,
+  type SearchPokemonArg,
+} from '../api/pokemonApi.ts'
+import { useAppDispatch } from '../store/hooks.ts'
+import { getReadableQueryError } from '../utils/rtkQueryError.ts'
 import { parsePageParam } from '../utils/urlParams.ts'
 import '../styles/error-shared.css'
 import '../styles/result.css'
@@ -20,37 +25,20 @@ function trim(value: string | undefined) {
 }
 
 export default function Result({ query, selectedId, onSelectPokemon }: Props) {
+  const dispatch = useAppDispatch()
   const [searchParams, setSearchParams] = useSearchParams()
   const page = parsePageParam(searchParams.get('page'))
 
-  const [items, setItems] = useState<PokemonDetails[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
   const normalizedQuery = trim(query)
   const pagingOn = normalizedQuery === ''
+  const searchArg: SearchPokemonArg = { query: normalizedQuery, page }
 
-  useEffect(() => {
-    let cancelled = false
+  const { data: items, isLoading, isFetching, error, refetch } = useSearchPokemonQuery(searchArg)
 
-    searchPokemon(normalizedQuery, page)
-      .then((data) => {
-        if (!cancelled) {
-          setItems(data)
-          setLoading(false)
-        }
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) {
-          setLoading(false)
-          setError(err instanceof Error ? err.message : 'Could not load data.')
-        }
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [normalizedQuery, page])
+  const refreshResults = () => {
+    dispatch(pokemonApi.util.invalidateTags([pokemonListCacheTag(searchArg)]))
+    void refetch()
+  }
 
   const goToPage = (nextPage: number) => {
     const nextParams: Record<string, string> = { page: String(nextPage) }
@@ -61,11 +49,24 @@ export default function Result({ query, selectedId, onSelectPokemon }: Props) {
     setSearchParams(nextParams)
   }
 
-  const showPagination = pagingOn && !loading && !error
+  const isBusy = isLoading || isFetching
+  const errorMessage = getReadableQueryError(error, 'Could not load data.')
+
+  const showPagination = pagingOn && !isBusy && !errorMessage
 
   return (
     <>
-      <h2 className="results-heading">Results</h2>
+      <div className="results-toolbar">
+        <h2 className="results-heading">Results</h2>
+        <button
+          type="button"
+          className="refresh-button"
+          aria-label="Refresh results"
+          onClick={refreshResults}
+        >
+          Refresh
+        </button>
+      </div>
 
       {showPagination && (
         <div className="pagination">
@@ -79,11 +80,11 @@ export default function Result({ query, selectedId, onSelectPokemon }: Props) {
         </div>
       )}
 
-      {loading ? (
+      {isBusy ? (
         <Loading />
-      ) : error ? (
-        <div className="error-panel">{error}</div>
-      ) : items.length === 0 ? (
+      ) : errorMessage ? (
+        <div className="error-panel">{errorMessage}</div>
+      ) : !items || items.length === 0 ? (
         <p className="no-results">No items found.</p>
       ) : (
         <CardList

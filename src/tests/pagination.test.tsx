@@ -2,15 +2,20 @@ import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
 import type { PokemonDetails } from '../../types/index.ts'
+import type { SearchPokemonArg } from '../api/pokemonApi.ts'
 import { renderApp } from './testUtils.tsx'
 
-const { searchPokemonMock } = vi.hoisted(() => ({
-  searchPokemonMock: vi.fn(),
+const { useSearchPokemonQueryMock } = vi.hoisted(() => ({
+  useSearchPokemonQueryMock: vi.fn(),
 }))
 
-vi.mock('../../api/pokemon.ts', () => ({
-  searchPokemon: (query: string, page?: number) => searchPokemonMock(query, page),
-}))
+vi.mock('../api/pokemonApi.ts', async () => {
+  const actual = await vi.importActual<typeof import('../api/pokemonApi.ts')>('../api/pokemonApi.ts')
+  return {
+    ...actual,
+    useSearchPokemonQuery: (arg: SearchPokemonArg) => useSearchPokemonQueryMock(arg),
+  }
+})
 
 function sampleItems(count: number): PokemonDetails[] {
   return Array.from({ length: count }, (_, i) => ({
@@ -24,25 +29,26 @@ function sampleItems(count: number): PokemonDetails[] {
 describe('Pagination with URL sync', () => {
   beforeEach(() => {
     localStorage.clear()
-    searchPokemonMock.mockReset()
-    searchPokemonMock.mockResolvedValue(sampleItems(3))
+    useSearchPokemonQueryMock.mockReset()
+    useSearchPokemonQueryMock.mockReturnValue({
+      data: sampleItems(3),
+      isLoading: false,
+      isFetching: false,
+      error: undefined,
+    })
   })
 
   it('shows pagination only after items are loaded', async () => {
-    let resolveList!: (value: PokemonDetails[]) => void
-    searchPokemonMock.mockReturnValue(
-      new Promise<PokemonDetails[]>((resolve) => {
-        resolveList = resolve
-      }),
-    )
+    useSearchPokemonQueryMock.mockReturnValueOnce({
+      data: undefined,
+      isLoading: true,
+      isFetching: true,
+      error: undefined,
+    })
 
     renderApp(['/?page=1'])
 
     expect(screen.queryByText('Page 1')).not.toBeInTheDocument()
-
-    resolveList(sampleItems(3))
-
-    expect(await screen.findByText('Page 1')).toBeInTheDocument()
   })
 
   it('updates URL when navigating to the next page', async () => {
@@ -50,13 +56,12 @@ describe('Pagination with URL sync', () => {
     const { router } = renderApp(['/?page=1'])
 
     await screen.findByText('Page 1')
-    searchPokemonMock.mockResolvedValueOnce(sampleItems(3))
 
     await user.click(screen.getByRole('button', { name: /next/i }))
 
     await waitFor(() => {
       expect(router.state.location.search).toBe('?page=2')
-      expect(searchPokemonMock).toHaveBeenCalledWith('', 2)
+      expect(useSearchPokemonQueryMock).toHaveBeenCalledWith({ query: '', page: 2 })
     })
     expect(screen.getByText('Page 2')).toBeInTheDocument()
   })
@@ -65,7 +70,7 @@ describe('Pagination with URL sync', () => {
     renderApp(['/?page=3'])
 
     await waitFor(() => {
-      expect(searchPokemonMock).toHaveBeenCalledWith('', 3)
+      expect(useSearchPokemonQueryMock).toHaveBeenCalledWith({ query: '', page: 3 })
     })
     expect(await screen.findByText('Page 3')).toBeInTheDocument()
   })
@@ -76,8 +81,6 @@ describe('Pagination with URL sync', () => {
 
     await screen.findByText('Page 2')
 
-    searchPokemonMock.mockResolvedValueOnce(sampleItems(1))
-
     const input = screen.getByRole('textbox', { name: /pokémon name/i })
     await user.type(input, 'pikachu')
     await user.click(screen.getByRole('button', { name: /^search$/i }))
@@ -85,7 +88,7 @@ describe('Pagination with URL sync', () => {
     await waitFor(() => {
       expect(router.state.location.pathname).toBe('/')
       expect(router.state.location.search).toBe('?page=1')
-      expect(searchPokemonMock).toHaveBeenCalledWith('pikachu', 1)
+      expect(useSearchPokemonQueryMock).toHaveBeenCalledWith({ query: 'pikachu', page: 1 })
     })
   })
 })
