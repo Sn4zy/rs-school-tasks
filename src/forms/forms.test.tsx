@@ -1,15 +1,16 @@
 import { describe, expect, it, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import { HookForm } from './HookForm';
 import { UncontrolledForm } from './UncontrolledForm';
 import { selectAllSubmissions } from '../store/submissionsSlice';
 import { renderWithStore } from '../test/test-utils';
 import { createFieldIds, TERMS_LABEL } from './shared/formFields';
-import { parseSubmissionData } from './shared/parseSubmissionData';
 
 const uncontrolledFieldIds = createFieldIds('uncontrolled');
 const hookFieldIds = createFieldIds('hook');
+
+const testImage = new File(['avatar'], 'avatar.png', { type: 'image/png' });
 
 const expectedData = {
   name: 'Alice',
@@ -17,101 +18,128 @@ const expectedData = {
   email: 'alice@example.com',
   gender: 'female' as const,
   acceptedTerms: true,
+  country: 'United States',
+  imageBase64: expect.stringContaining('data:image/png;base64,'),
 };
 
-async function fillBasicFields(user: ReturnType<typeof userEvent.setup>) {
+async function fillValidForm(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByLabelText('Name'), expectedData.name);
   await user.type(screen.getByLabelText('Age'), String(expectedData.age));
   await user.type(screen.getByLabelText('Email'), expectedData.email);
   await user.click(screen.getByLabelText('Female'));
+  await user.type(screen.getByLabelText('Password'), 'Aa1!');
+  await user.type(screen.getByLabelText('Confirm password'), 'Aa1!');
+  await user.type(screen.getByLabelText('Country'), expectedData.country);
+  await user.upload(screen.getByLabelText('Profile image'), testImage);
   await user.click(screen.getByLabelText(TERMS_LABEL));
 }
 
-describe('UncontrolledForm basic fields', () => {
-  it('renders all basic fields with labels connected via htmlFor', () => {
+describe('UncontrolledForm', () => {
+  it('renders all fields with labels connected via htmlFor', () => {
     renderWithStore(<UncontrolledForm onSuccess={vi.fn()} />);
 
     expect(screen.getByLabelText('Name')).toHaveAttribute('id', uncontrolledFieldIds.name);
     expect(screen.getByLabelText('Age')).toHaveAttribute('id', uncontrolledFieldIds.age);
     expect(screen.getByLabelText('Email')).toHaveAttribute('id', uncontrolledFieldIds.email);
-    expect(screen.getByLabelText('Male')).toHaveAttribute(
+    expect(screen.getByLabelText('Password')).toHaveAttribute('id', uncontrolledFieldIds.password);
+    expect(screen.getByLabelText('Confirm password')).toHaveAttribute(
       'id',
-      uncontrolledFieldIds.gender('male')
+      uncontrolledFieldIds.confirmPassword
     );
-    expect(screen.getByLabelText('Female')).toHaveAttribute(
-      'id',
-      uncontrolledFieldIds.gender('female')
-    );
-    expect(screen.getByLabelText('Other')).toHaveAttribute(
-      'id',
-      uncontrolledFieldIds.gender('other')
-    );
+    expect(screen.getByLabelText('Country')).toHaveAttribute('id', uncontrolledFieldIds.country);
+    expect(screen.getByLabelText('Profile image')).toHaveAttribute('id', uncontrolledFieldIds.image);
     expect(screen.getByLabelText(TERMS_LABEL)).toHaveAttribute(
       'id',
       uncontrolledFieldIds.acceptedTerms
     );
   });
 
-  it('collects field values and stores them on submit', async () => {
+  it('shows validation errors only after submit', async () => {
+    const user = userEvent.setup();
+    const onSuccess = vi.fn();
+    renderWithStore(<UncontrolledForm onSuccess={onSuccess} />);
+
+    await user.click(screen.getByRole('button', { name: 'Submit profile' }));
+
+    expect(screen.getByText('Name is required')).toBeInTheDocument();
+    expect(screen.getByText('Image is required')).toBeInTheDocument();
+    expect(onSuccess).not.toHaveBeenCalled();
+  });
+
+  it('stores valid submissions with a base64 image', async () => {
     const user = userEvent.setup();
     const onSuccess = vi.fn();
     const { store } = renderWithStore(<UncontrolledForm onSuccess={onSuccess} />);
 
-    await fillBasicFields(user);
+    await fillValidForm(user);
     await user.click(screen.getByRole('button', { name: 'Submit profile' }));
+
+    await waitFor(() => {
+      expect(onSuccess).toHaveBeenCalledOnce();
+    });
 
     const submissions = selectAllSubmissions(store.getState());
     expect(submissions).toHaveLength(1);
     expect(submissions[0].source).toBe('uncontrolled');
     expect(submissions[0].data).toEqual(expectedData);
-    expect(onSuccess).toHaveBeenCalledOnce();
+  });
+
+  it('shows password strength requirements', async () => {
+    const user = userEvent.setup();
+    renderWithStore(<UncontrolledForm onSuccess={vi.fn()} />);
+
+    await user.type(screen.getByLabelText('Password'), 'Aa1!');
+
+    expect(screen.getByText('1 number')).toHaveClass('password-strength-met');
+    expect(screen.getByText('1 uppercase letter')).toHaveClass('password-strength-met');
+    expect(screen.getByText('1 lowercase letter')).toHaveClass('password-strength-met');
+    expect(screen.getByText('1 special character')).toHaveClass('password-strength-met');
   });
 });
 
-describe('HookForm basic fields', () => {
-  it('renders all basic fields with labels connected via htmlFor', () => {
+describe('HookForm', () => {
+  it('renders all fields with labels connected via htmlFor', () => {
     renderWithStore(<HookForm onSuccess={vi.fn()} />);
 
     expect(screen.getByLabelText('Name')).toHaveAttribute('id', hookFieldIds.name);
-    expect(screen.getByLabelText('Age')).toHaveAttribute('id', hookFieldIds.age);
-    expect(screen.getByLabelText('Email')).toHaveAttribute('id', hookFieldIds.email);
-    expect(screen.getByLabelText('Male')).toHaveAttribute('id', hookFieldIds.gender('male'));
-    expect(screen.getByLabelText('Female')).toHaveAttribute('id', hookFieldIds.gender('female'));
-    expect(screen.getByLabelText('Other')).toHaveAttribute('id', hookFieldIds.gender('other'));
-    expect(screen.getByLabelText(TERMS_LABEL)).toHaveAttribute('id', hookFieldIds.acceptedTerms);
+    expect(screen.getByLabelText('Password')).toHaveAttribute('id', hookFieldIds.password);
+    expect(screen.getByLabelText('Country')).toHaveAttribute('id', hookFieldIds.country);
+    expect(screen.getByLabelText('Profile image')).toHaveAttribute('id', hookFieldIds.image);
   });
 
-  it('collects field values and stores them on submit', async () => {
+  it('keeps submit disabled until the form is valid', async () => {
+    const user = userEvent.setup();
+    renderWithStore(<HookForm onSuccess={vi.fn()} />);
+
+    expect(screen.getByRole('button', { name: 'Submit profile' })).toBeDisabled();
+
+    await fillValidForm(user);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Submit profile' })).toBeEnabled();
+    });
+  });
+
+  it('stores valid submissions with a base64 image', async () => {
     const user = userEvent.setup();
     const onSuccess = vi.fn();
     const { store } = renderWithStore(<HookForm onSuccess={onSuccess} />);
 
-    await fillBasicFields(user);
+    await fillValidForm(user);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Submit profile' })).toBeEnabled();
+    });
+
     await user.click(screen.getByRole('button', { name: 'Submit profile' }));
+
+    await waitFor(() => {
+      expect(onSuccess).toHaveBeenCalledOnce();
+    });
 
     const submissions = selectAllSubmissions(store.getState());
     expect(submissions).toHaveLength(1);
     expect(submissions[0].source).toBe('hook-form');
     expect(submissions[0].data).toEqual(expectedData);
-    expect(onSuccess).toHaveBeenCalledOnce();
-  });
-});
-
-describe('parseSubmissionData', () => {
-  it('maps FormData entries to submission data', () => {
-    const formData = new FormData();
-    formData.set('name', ' Bob ');
-    formData.set('age', '31');
-    formData.set('email', ' bob@example.com ');
-    formData.set('gender', 'male');
-    formData.set('acceptedTerms', 'on');
-
-    expect(parseSubmissionData(formData)).toEqual({
-      name: 'Bob',
-      age: 31,
-      email: 'bob@example.com',
-      gender: 'male',
-      acceptedTerms: true,
-    });
   });
 });

@@ -8,8 +8,8 @@ export interface FormSubmissionData {
   email: string;
   gender: Gender;
   acceptedTerms: boolean;
-  country?: string;
-  imageBase64?: string;
+  country: string;
+  imageBase64: string;
 }
 
 export interface FormSubmission {
@@ -20,10 +20,3 @@ export interface FormSubmission {
   isNew: boolean;
 }
 
-export interface BasicFormValues {
-  name: string;
-  age: string;
-  email: string;
-  gender: Gender | '';
-  acceptedTerms: boolean;
-}

@@ -55,6 +55,12 @@ export function SubmissionCard({ submission }: SubmissionCardProps) {
         </time>
       </header>
 
+      <img
+        className="profile-image"
+        src={data.imageBase64}
+        alt={`Profile of ${data.name}`}
+      />
+
       <dl className="card-details">
         <div className="detail-item">
           <dt>Name</dt>
@@ -71,6 +77,10 @@ export function SubmissionCard({ submission }: SubmissionCardProps) {
         <div className="detail-item">
           <dt>Gender</dt>
           <dd>{formatGender(data.gender)}</dd>
+        </div>
+        <div className="detail-item">
+          <dt>Country</dt>
+          <dd>{data.country}</dd>
         </div>
         <div className="detail-item">
           <dt>Terms accepted</dt>

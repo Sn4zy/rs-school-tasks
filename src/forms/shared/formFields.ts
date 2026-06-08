@@ -15,5 +15,10 @@ export function createFieldIds(prefix: string) {
     email: `${prefix}-email`,
     gender: (value: Gender) => `${prefix}-gender-${value}`,
     acceptedTerms: `${prefix}-accepted-terms`,
+    password: `${prefix}-password`,
+    confirmPassword: `${prefix}-confirm-password`,
+    country: `${prefix}-country`,
+    countryList: `${prefix}-country-list`,
+    image: `${prefix}-image`,
   };
 }

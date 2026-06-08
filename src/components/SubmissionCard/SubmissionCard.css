@@ -52,6 +52,14 @@
   font-size: 0.875rem;
 }
 
+.profile-image {
+  width: 100%;
+  max-height: 12rem;
+  object-fit: cover;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+}
+
 .card-details {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));

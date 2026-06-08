@@ -15,6 +15,8 @@ describe('submissionsSlice', () => {
     email: 'alice@example.com',
     gender: 'female' as const,
     acceptedTerms: true,
+    country: 'United States',
+    imageBase64: 'data:image/png;base64,abc',
   };
 
   it('adds submissions to the beginning of history', () => {

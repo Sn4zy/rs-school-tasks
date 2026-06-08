@@ -15,7 +15,8 @@
 }
 
 .field-input,
-.select-input {
+.select-input,
+.field-input[type='file'] {
   width: 100%;
   min-height: 2.75rem;
   padding: 0.625rem 0.875rem;
