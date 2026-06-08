@@ -1,13 +1,16 @@
 import { useState } from 'react';
 import { Modal } from '../components/Modal/Modal';
-import { HookFormPlaceholder } from '../forms/HookFormPlaceholder';
-import { UncontrolledFormPlaceholder } from '../forms/UncontrolledFormPlaceholder';
+import { SubmissionsSection } from '../components/SubmissionsSection/SubmissionsSection';
+import { HookForm } from '../forms/HookForm';
+import { UncontrolledForm } from '../forms/UncontrolledForm';
+import '../components/Button/Button.css';
 import './HomePage.css';
 
 type ActiveModal = 'uncontrolled' | 'hook-form' | null;
 
 export function HomePage() {
   const [activeModal, setActiveModal] = useState<ActiveModal>(null);
+
   const closeModal = () => {
     setActiveModal(null);
   };
@@ -50,22 +53,14 @@ export function HomePage() {
         </div>
       </header>
 
-      <section className="submissions" aria-labelledby="submissions-heading">
-        <div className="submissions__header">
-          <h2 id="submissions-heading">Submission history</h2>
-          <p>No submissions yet. Complete a form to see your data here.</p>
-        </div>
-        <div className="submissions__empty" aria-live="polite">
-          Waiting for your first profile submission.
-        </div>
-      </section>
+      <SubmissionsSection />
 
       <Modal
         isOpen={activeModal === 'uncontrolled'}
         onClose={closeModal}
         title="Uncontrolled profile form"
       >
-        <UncontrolledFormPlaceholder />
+        <UncontrolledForm onSuccess={closeModal} />
       </Modal>
 
       <Modal
@@ -73,7 +68,7 @@ export function HomePage() {
         onClose={closeModal}
         title="React Hook Form profile"
       >
-        <HookFormPlaceholder />
+        <HookForm onSuccess={closeModal} />
       </Modal>
     </div>
   );

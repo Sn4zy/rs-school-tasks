@@ -45,115 +45,16 @@
   gap: 0.875rem;
 }
 
-.button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 2.875rem;
-  padding: 0.75rem 1.25rem;
-  border: 1px solid transparent;
-  border-radius: 999px;
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
-  transition:
-    transform 160ms ease,
-    box-shadow 160ms ease,
-    background-color 160ms ease,
-    border-color 160ms ease;
-}
-
-.button:focus-visible {
-  outline: 3px solid rgb(14 165 233 / 35%);
-  outline-offset: 2px;
-}
-
-.button--primary {
-  background: var(--accent);
-  color: #fff;
-  box-shadow: 0 10px 24px rgb(14 165 233 / 28%);
-}
-
-.button--primary:hover {
-  transform: translateY(-1px);
-  background: var(--accent-strong);
-}
-
-.button--secondary {
-  border-color: var(--border-strong);
-  background: var(--surface-muted);
-  color: var(--text-primary);
-}
-
-.button--secondary:hover {
-  transform: translateY(-1px);
-  border-color: var(--accent);
-}
-
-.submissions {
-  margin-top: 2rem;
-  padding: 1.75rem;
-  border: 1px solid var(--border);
-  border-radius: 1.25rem;
-  background: var(--surface);
-  box-shadow: var(--shadow-soft);
-}
-
-.submissions__header h2 {
-  margin: 0;
-  font-size: 1.375rem;
-}
-
-.submissions__header p {
-  margin: 0.5rem 0 0;
-  color: var(--text-muted);
-}
-
-.submissions__empty {
-  margin-top: 1.25rem;
-  padding: 2rem 1.5rem;
-  border: 1px dashed var(--border-strong);
-  border-radius: 1rem;
-  background: var(--surface-muted);
-  color: var(--text-muted);
-  text-align: center;
-}
-
-.form-placeholder {
-  display: grid;
-  gap: 0.75rem;
-}
-
-.form-placeholder__label {
-  margin: 0;
-  color: var(--accent-strong);
-  font-size: 0.875rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.form-placeholder__text {
-  margin: 0;
-  color: var(--text-muted);
-  line-height: 1.6;
-}
-
 @media (max-width: 640px) {
   .home-page {
     padding-top: 1.5rem;
   }
 
-  .home-page__header,
-  .submissions {
+  .home-page__header {
     padding: 1.25rem;
   }
 
   .home-page__actions {
     flex-direction: column;
-  }
-
-  .button {
-    width: 100%;
   }
 }
