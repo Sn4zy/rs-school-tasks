@@ -14,8 +14,13 @@ export function createTestStore() {
   });
 }
 
-export function renderWithStore(ui: ReactElement, options?: Omit<RenderOptions, 'wrapper'>) {
-  const store = createTestStore();
+interface RenderWithStoreOptions extends Omit<RenderOptions, 'wrapper'> {
+  store?: ReturnType<typeof createTestStore>;
+}
+
+export function renderWithStore(ui: ReactElement, options?: RenderWithStoreOptions) {
+  const store = options?.store ?? createTestStore();
+  const { store: _store, ...renderOptions } = options ?? {};
 
   function Wrapper({ children }: { children: ReactNode }) {
     return <Provider store={store}>{children}</Provider>;
@@ -23,6 +28,6 @@ export function renderWithStore(ui: ReactElement, options?: Omit<RenderOptions, 
 
   return {
     store,
-    ...render(ui, { wrapper: Wrapper, ...options }),
+    ...render(ui, { wrapper: Wrapper, ...renderOptions }),
   };
 }

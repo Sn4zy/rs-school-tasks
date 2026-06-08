@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { isValidImageSize, isValidImageType } from './imageUtils';
+import { fileToBase64, isValidImageSize, isValidImageType } from './imageUtils';
+import { mapZodErrors } from '../forms/shared/mapZodErrors';
+import { createUncontrolledFormSchema } from '../forms/shared/formSchema';
 import { getPasswordStrength } from './passwordStrength';
 import { validateEmail } from './validateEmail';
 
@@ -49,5 +51,38 @@ describe('imageUtils', () => {
 
     expect(isValidImageSize(smallFile)).toBe(true);
     expect(isValidImageSize(largeFile)).toBe(false);
+  });
+
+  it('converts an image file to base64', async () => {
+    const file = new File(['avatar'], 'avatar.png', { type: 'image/png' });
+    const result = await fileToBase64(file);
+
+    expect(result).toContain('data:image/png;base64,');
+  });
+});
+
+describe('mapZodErrors', () => {
+  it('maps the first zod issue per field', () => {
+    const schema = createUncontrolledFormSchema(['United States']);
+    const result = schema.safeParse({
+      name: '',
+      age: '',
+      email: 'invalid',
+      gender: '',
+      acceptedTerms: false,
+      password: '',
+      confirmPassword: '',
+      country: '',
+      imageFile: null,
+    });
+
+    if (result.success) {
+      throw new Error('Expected validation to fail');
+    }
+
+    const errors = mapZodErrors(result.error);
+
+    expect(errors.name).toBe('Name is required');
+    expect(errors.imageFile).toBe('Image is required');
   });
 });

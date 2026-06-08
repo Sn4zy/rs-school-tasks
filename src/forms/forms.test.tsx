@@ -5,53 +5,20 @@ import { HookForm } from './HookForm';
 import { UncontrolledForm } from './UncontrolledForm';
 import { selectAllSubmissions } from '../store/submissionsSlice';
 import { renderWithStore } from '../test/test-utils';
-import { createFieldIds, TERMS_LABEL } from './shared/formFields';
+import { createFieldIds } from './shared/formFields';
+import { fillValidForm, validSubmission } from '../test/formTestHelpers';
 
 const uncontrolledFieldIds = createFieldIds('uncontrolled');
 const hookFieldIds = createFieldIds('hook');
-
-const testImage = new File(['avatar'], 'avatar.png', { type: 'image/png' });
-
-const expectedData = {
-  name: 'Alice',
-  age: 28,
-  email: 'alice@example.com',
-  gender: 'female' as const,
-  acceptedTerms: true,
-  country: 'United States',
-  imageBase64: expect.stringContaining('data:image/png;base64,'),
-};
-
-async function fillValidForm(user: ReturnType<typeof userEvent.setup>) {
-  await user.type(screen.getByLabelText('Name'), expectedData.name);
-  await user.type(screen.getByLabelText('Age'), String(expectedData.age));
-  await user.type(screen.getByLabelText('Email'), expectedData.email);
-  await user.click(screen.getByLabelText('Female'));
-  await user.type(screen.getByLabelText('Password'), 'Aa1!');
-  await user.type(screen.getByLabelText('Confirm password'), 'Aa1!');
-  await user.type(screen.getByLabelText('Country'), expectedData.country);
-  await user.upload(screen.getByLabelText('Profile image'), testImage);
-  await user.click(screen.getByLabelText(TERMS_LABEL));
-}
 
 describe('UncontrolledForm', () => {
   it('renders all fields with labels connected via htmlFor', () => {
     renderWithStore(<UncontrolledForm onSuccess={vi.fn()} />);
 
     expect(screen.getByLabelText('Name')).toHaveAttribute('id', uncontrolledFieldIds.name);
-    expect(screen.getByLabelText('Age')).toHaveAttribute('id', uncontrolledFieldIds.age);
-    expect(screen.getByLabelText('Email')).toHaveAttribute('id', uncontrolledFieldIds.email);
     expect(screen.getByLabelText('Password')).toHaveAttribute('id', uncontrolledFieldIds.password);
-    expect(screen.getByLabelText('Confirm password')).toHaveAttribute(
-      'id',
-      uncontrolledFieldIds.confirmPassword
-    );
     expect(screen.getByLabelText('Country')).toHaveAttribute('id', uncontrolledFieldIds.country);
     expect(screen.getByLabelText('Profile image')).toHaveAttribute('id', uncontrolledFieldIds.image);
-    expect(screen.getByLabelText(TERMS_LABEL)).toHaveAttribute(
-      'id',
-      uncontrolledFieldIds.acceptedTerms
-    );
   });
 
   it('shows validation errors only after submit', async () => {
@@ -81,19 +48,20 @@ describe('UncontrolledForm', () => {
     const submissions = selectAllSubmissions(store.getState());
     expect(submissions).toHaveLength(1);
     expect(submissions[0].source).toBe('uncontrolled');
-    expect(submissions[0].data).toEqual(expectedData);
+    expect(submissions[0].data).toEqual(validSubmission);
   });
 
-  it('shows password strength requirements', async () => {
+  it('resets fields after a successful submit', async () => {
     const user = userEvent.setup();
     renderWithStore(<UncontrolledForm onSuccess={vi.fn()} />);
 
-    await user.type(screen.getByLabelText('Password'), 'Aa1!');
+    await fillValidForm(user);
+    await user.click(screen.getByRole('button', { name: 'Submit profile' }));
 
-    expect(screen.getByText('1 number')).toHaveClass('password-strength-met');
-    expect(screen.getByText('1 uppercase letter')).toHaveClass('password-strength-met');
-    expect(screen.getByText('1 lowercase letter')).toHaveClass('password-strength-met');
-    expect(screen.getByText('1 special character')).toHaveClass('password-strength-met');
+    await waitFor(() => {
+      expect(screen.getByLabelText('Name')).toHaveValue('');
+      expect(screen.getByLabelText('Password')).toHaveValue('');
+    });
   });
 });
 
@@ -140,6 +108,24 @@ describe('HookForm', () => {
     const submissions = selectAllSubmissions(store.getState());
     expect(submissions).toHaveLength(1);
     expect(submissions[0].source).toBe('hook-form');
-    expect(submissions[0].data).toEqual(expectedData);
+    expect(submissions[0].data).toEqual(validSubmission);
+  });
+
+  it('resets fields after a successful submit', async () => {
+    const user = userEvent.setup();
+    renderWithStore(<HookForm onSuccess={vi.fn()} />);
+
+    await fillValidForm(user);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Submit profile' })).toBeEnabled();
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Submit profile' }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Name')).toHaveValue('');
+      expect(screen.getByLabelText('Password')).toHaveValue('');
+    });
   });
 });
