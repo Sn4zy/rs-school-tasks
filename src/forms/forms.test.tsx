@@ -48,7 +48,10 @@ describe('UncontrolledForm', () => {
     const submissions = selectAllSubmissions(store.getState());
     expect(submissions).toHaveLength(1);
     expect(submissions[0].source).toBe('uncontrolled');
-    expect(submissions[0].data).toEqual(validSubmission);
+    expect(submissions[0].data).toEqual({
+      ...validSubmission,
+      imageBase64: expect.stringContaining('data:image/png;base64,'),
+    });
   });
 
   it('resets fields after a successful submit', async () => {
@@ -108,7 +111,10 @@ describe('HookForm', () => {
     const submissions = selectAllSubmissions(store.getState());
     expect(submissions).toHaveLength(1);
     expect(submissions[0].source).toBe('hook-form');
-    expect(submissions[0].data).toEqual(validSubmission);
+    expect(submissions[0].data).toEqual({
+      ...validSubmission,
+      imageBase64: expect.stringContaining('data:image/png;base64,'),
+    });
   });
 
   it('resets fields after a successful submit', async () => {

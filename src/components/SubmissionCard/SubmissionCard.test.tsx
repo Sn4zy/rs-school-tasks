@@ -69,5 +69,6 @@ describe('SubmissionCard', () => {
     });
 
     expect(selectAllSubmissions(store.getState())[0]?.isNew).toBe(false);
+    expect(card).not.toHaveClass('is-new');
   });
 });

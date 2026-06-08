@@ -19,8 +19,8 @@ interface RenderWithStoreOptions extends Omit<RenderOptions, 'wrapper'> {
 }
 
 export function renderWithStore(ui: ReactElement, options?: RenderWithStoreOptions) {
-  const store = options?.store ?? createTestStore();
-  const { store: _store, ...renderOptions } = options ?? {};
+  const { store: providedStore, ...renderOptions } = options ?? {};
+  const store = providedStore ?? createTestStore();
 
   function Wrapper({ children }: { children: ReactNode }) {
     return <Provider store={store}>{children}</Provider>;

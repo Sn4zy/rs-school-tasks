@@ -8,6 +8,7 @@ import { FieldError } from './shared/FieldError';
 import { createFieldIds, GENDER_OPTIONS, TERMS_LABEL } from './shared/formFields';
 import { createUncontrolledFormSchema } from './shared/formSchema';
 import { mapZodErrors } from './shared/mapZodErrors';
+import { PasswordField } from './shared/PasswordField';
 import { PasswordStrengthIndicator } from './shared/PasswordStrengthIndicator';
 import './UncontrolledForm.css';
 
@@ -23,6 +24,7 @@ export function UncontrolledForm({ onSuccess }: UncontrolledFormProps) {
   const formRef = useRef<HTMLFormElement>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [passwordValue, setPasswordValue] = useState('');
+  const [formResetKey, setFormResetKey] = useState(0);
 
   const schema = useMemo(() => createUncontrolledFormSchema(countries), [countries]);
 
@@ -76,6 +78,7 @@ export function UncontrolledForm({ onSuccess }: UncontrolledFormProps) {
 
     form.reset();
     setPasswordValue('');
+    setFormResetKey((current) => current + 1);
     onSuccess();
   };
 
@@ -150,35 +153,25 @@ export function UncontrolledForm({ onSuccess }: UncontrolledFormProps) {
         <FieldError message={errors.gender} />
       </fieldset>
 
-      <div className="field">
-        <label className="field-label" htmlFor={fieldIds.password}>
-          Password
-        </label>
-        <input
-          id={fieldIds.password}
-          className="field-input"
-          name="password"
-          type="password"
-          autoComplete="new-password"
-          onChange={(event) => setPasswordValue(event.target.value)}
-        />
-        <FieldError message={errors.password} />
-        <PasswordStrengthIndicator password={passwordValue} />
-      </div>
+      <PasswordField
+        key={`password-${formResetKey}`}
+        id={fieldIds.password}
+        label="Password"
+        error={errors.password}
+        inputProps={{
+          name: 'password',
+          onChange: (event) => setPasswordValue(event.target.value),
+        }}
+      />
+      <PasswordStrengthIndicator password={passwordValue} />
 
-      <div className="field">
-        <label className="field-label" htmlFor={fieldIds.confirmPassword}>
-          Confirm password
-        </label>
-        <input
-          id={fieldIds.confirmPassword}
-          className="field-input"
-          name="confirmPassword"
-          type="password"
-          autoComplete="new-password"
-        />
-        <FieldError message={errors.confirmPassword} />
-      </div>
+      <PasswordField
+        key={`confirm-password-${formResetKey}`}
+        id={fieldIds.confirmPassword}
+        label="Confirm password"
+        error={errors.confirmPassword}
+        inputProps={{ name: 'confirmPassword' }}
+      />
 
       <CountryAutocomplete
         id={fieldIds.country}

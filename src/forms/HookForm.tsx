@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMemo } from 'react';
-import { useForm, type Resolver } from 'react-hook-form';
+import { useMemo, useState } from 'react';
+import { useForm, useWatch, type Resolver } from 'react-hook-form';
 import type { Gender } from '../types/submission';
 import { selectCountries } from '../store/countriesSlice';
 import { addSubmission } from '../store/submissionsSlice';
@@ -10,6 +10,7 @@ import { CountryAutocomplete } from './shared/CountryAutocomplete';
 import { FieldError } from './shared/FieldError';
 import { createFieldIds, GENDER_OPTIONS, TERMS_LABEL } from './shared/formFields';
 import { createHookFormSchema, type HookFormValues } from './shared/formSchema';
+import { PasswordField } from './shared/PasswordField';
 import { PasswordStrengthIndicator } from './shared/PasswordStrengthIndicator';
 import './HookForm.css';
 
@@ -35,12 +36,13 @@ export function HookForm({ onSuccess }: HookFormProps) {
   const dispatch = useAppDispatch();
   const countries = useAppSelector(selectCountries);
   const schema = useMemo(() => createHookFormSchema(countries), [countries]);
+  const [formResetKey, setFormResetKey] = useState(0);
 
   const {
     register,
     handleSubmit,
     reset,
-    watch,
+    control,
     formState: { errors, isValid },
   } = useForm<HookFormValues>({
     resolver: zodResolver(schema) as Resolver<HookFormValues>,
@@ -48,7 +50,7 @@ export function HookForm({ onSuccess }: HookFormProps) {
     mode: 'onChange',
   });
 
-  const passwordValue = watch('password');
+  const passwordValue = useWatch({ control, name: 'password', defaultValue: '' }) ?? '';
 
   const onSubmit = async (values: HookFormValues) => {
     const imageFile = values.image?.[0];
@@ -75,6 +77,7 @@ export function HookForm({ onSuccess }: HookFormProps) {
     );
 
     reset(defaultValues);
+    setFormResetKey((current) => current + 1);
     onSuccess();
   };
 
@@ -148,34 +151,22 @@ export function HookForm({ onSuccess }: HookFormProps) {
         <FieldError message={errors.gender?.message} />
       </fieldset>
 
-      <div className="field">
-        <label className="field-label" htmlFor={fieldIds.password}>
-          Password
-        </label>
-        <input
-          id={fieldIds.password}
-          className="field-input"
-          type="password"
-          autoComplete="new-password"
-          {...register('password')}
-        />
-        <FieldError message={errors.password?.message} />
-        <PasswordStrengthIndicator password={passwordValue} />
-      </div>
+      <PasswordField
+        key={`password-${formResetKey}`}
+        id={fieldIds.password}
+        label="Password"
+        error={errors.password?.message}
+        inputProps={register('password')}
+      />
+      <PasswordStrengthIndicator password={passwordValue} />
 
-      <div className="field">
-        <label className="field-label" htmlFor={fieldIds.confirmPassword}>
-          Confirm password
-        </label>
-        <input
-          id={fieldIds.confirmPassword}
-          className="field-input"
-          type="password"
-          autoComplete="new-password"
-          {...register('confirmPassword')}
-        />
-        <FieldError message={errors.confirmPassword?.message} />
-      </div>
+      <PasswordField
+        key={`confirm-password-${formResetKey}`}
+        id={fieldIds.confirmPassword}
+        label="Confirm password"
+        error={errors.confirmPassword?.message}
+        inputProps={register('confirmPassword')}
+      />
 
       <CountryAutocomplete
         id={fieldIds.country}

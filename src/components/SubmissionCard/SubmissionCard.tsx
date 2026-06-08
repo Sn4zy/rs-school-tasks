@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
-import { clearSubmissionHighlight } from '../../store/submissionsSlice';
-import { useAppDispatch } from '../../store/hooks';
+import { clearSubmissionHighlight, selectAllSubmissions } from '../../store/submissionsSlice';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import type { FormSubmission } from '../../types/submission';
 import './SubmissionCard.css';
 
@@ -26,7 +26,10 @@ function formatDate(isoDate: string): string {
 
 export function SubmissionCard({ submission }: SubmissionCardProps) {
   const dispatch = useAppDispatch();
-  const { id, source, submittedAt, data, isNew } = submission;
+  const submissions = useAppSelector(selectAllSubmissions);
+  const currentSubmission =
+    submissions.find((item) => item.id === submission.id) ?? submission;
+  const { id, source, submittedAt, data, isNew } = currentSubmission;
 
   useEffect(() => {
     if (!isNew) {

@@ -11,7 +11,6 @@ export const validSubmission = {
   gender: 'female' as const,
   acceptedTerms: true,
   country: 'United States',
-  imageBase64: expect.stringContaining('data:image/png;base64,'),
 };
 
 export async function fillValidForm(user: ReturnType<typeof userEvent.setup>) {
