@@ -24,30 +24,22 @@ export function HomePage() {
   };
 
   return (
-    <div className="home-page">
-      <header className="home-page__header">
-        <div className="home-page__intro">
-          <p className="home-page__eyebrow">RS School · React Forms</p>
-          <h1 className="home-page__title">Profile submissions</h1>
-          <p className="home-page__subtitle">
+    <div className="page">
+      <header className="hero">
+        <div>
+          <p className="tagline">RS School · React Forms</p>
+          <h1 className="page-title">Profile submissions</h1>
+          <p className="page-description">
             Open either form in an accessible modal without leaving this page. Successful
             submissions will appear below as cards.
           </p>
         </div>
 
-        <div className="home-page__actions">
-          <button
-            type="button"
-            className="button button--primary"
-            onClick={openUncontrolledModal}
-          >
+        <div className="open-form-buttons">
+          <button type="button" className="primary-button" onClick={openUncontrolledModal}>
             Open uncontrolled form
           </button>
-          <button
-            type="button"
-            className="button button--secondary"
-            onClick={openHookFormModal}
-          >
+          <button type="button" className="secondary-button" onClick={openHookFormModal}>
             Open React Hook Form
           </button>
         </div>

@@ -44,37 +44,35 @@ export function SubmissionCard({ submission }: SubmissionCardProps) {
 
   return (
     <article
-      className={`submission-card${isNew ? ' submission-card--new' : ''}`}
+      className={`result-card${isNew ? ' is-new' : ''}`}
       aria-label={`Submission from ${SOURCE_LABELS[source]}`}
       data-testid="submission-card"
     >
-      <header className="submission-card__header">
-        <span className={`submission-card__badge submission-card__badge--${source}`}>
-          {SOURCE_LABELS[source]}
-        </span>
-        <time className="submission-card__date" dateTime={submittedAt}>
+      <header className="card-header">
+        <span className={`source-badge ${source}`}>{SOURCE_LABELS[source]}</span>
+        <time className="submitted-date" dateTime={submittedAt}>
           {formatDate(submittedAt)}
         </time>
       </header>
 
-      <dl className="submission-card__details">
-        <div className="submission-card__detail">
+      <dl className="card-details">
+        <div className="detail-item">
           <dt>Name</dt>
           <dd>{data.name}</dd>
         </div>
-        <div className="submission-card__detail">
+        <div className="detail-item">
           <dt>Age</dt>
           <dd>{data.age}</dd>
         </div>
-        <div className="submission-card__detail">
+        <div className="detail-item">
           <dt>Email</dt>
           <dd>{data.email}</dd>
         </div>
-        <div className="submission-card__detail">
+        <div className="detail-item">
           <dt>Gender</dt>
           <dd>{formatGender(data.gender)}</dd>
         </div>
-        <div className="submission-card__detail">
+        <div className="detail-item">
           <dt>Terms accepted</dt>
           <dd>{data.acceptedTerms ? 'Yes' : 'No'}</dd>
         </div>

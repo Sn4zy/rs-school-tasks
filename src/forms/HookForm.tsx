@@ -2,17 +2,14 @@ import { useForm } from 'react-hook-form';
 import { addSubmission } from '../store/submissionsSlice';
 import { useAppDispatch } from '../store/hooks';
 import type { BasicFormValues, Gender } from '../types/submission';
+import { createFieldIds, GENDER_OPTIONS, TERMS_LABEL } from './shared/formFields';
 import './HookForm.css';
 
 interface HookFormProps {
   onSuccess: () => void;
 }
 
-const GENDER_OPTIONS: { value: Gender; label: string }[] = [
-  { value: 'male', label: 'Male' },
-  { value: 'female', label: 'Female' },
-  { value: 'other', label: 'Other' },
-];
+const fieldIds = createFieldIds('hook');
 
 const defaultValues: BasicFormValues = {
   name: '',
@@ -53,26 +50,26 @@ export function HookForm({ onSuccess }: HookFormProps) {
       noValidate
       data-testid="hook-form"
     >
-      <div className="profile-form__field">
-        <label className="profile-form__label" htmlFor="hook-name">
+      <div className="field">
+        <label className="field-label" htmlFor={fieldIds.name}>
           Name
         </label>
         <input
-          id="hook-name"
-          className="profile-form__input"
+          id={fieldIds.name}
+          className="field-input"
           type="text"
           autoComplete="name"
           {...register('name')}
         />
       </div>
 
-      <div className="profile-form__field">
-        <label className="profile-form__label" htmlFor="hook-age">
+      <div className="field">
+        <label className="field-label" htmlFor={fieldIds.age}>
           Age
         </label>
         <input
-          id="hook-age"
-          className="profile-form__input"
+          id={fieldIds.age}
+          className="field-input"
           type="number"
           min="0"
           inputMode="numeric"
@@ -80,38 +77,52 @@ export function HookForm({ onSuccess }: HookFormProps) {
         />
       </div>
 
-      <div className="profile-form__field">
-        <label className="profile-form__label" htmlFor="hook-email">
+      <div className="field">
+        <label className="field-label" htmlFor={fieldIds.email}>
           Email
         </label>
         <input
-          id="hook-email"
-          className="profile-form__input"
+          id={fieldIds.email}
+          className="field-input"
           type="email"
           autoComplete="email"
           {...register('email')}
         />
       </div>
 
-      <fieldset className="profile-form__fieldset">
-        <legend className="profile-form__legend">Gender</legend>
-        <div className="profile-form__radio-group">
+      <fieldset className="field-group">
+        <legend className="field-group-title">Gender</legend>
+        <div className="radio-options">
           {GENDER_OPTIONS.map((option) => (
-            <label key={option.value} className="profile-form__radio-option">
-              <input type="radio" value={option.value} {...register('gender')} />
-              {option.label}
-            </label>
+            <div key={option.value} className="radio-option">
+              <input
+                id={fieldIds.gender(option.value)}
+                type="radio"
+                value={option.value}
+                {...register('gender')}
+              />
+              <label className="radio-label" htmlFor={fieldIds.gender(option.value)}>
+                {option.label}
+              </label>
+            </div>
           ))}
         </div>
       </fieldset>
 
-      <label className="profile-form__checkbox-option">
-        <input type="checkbox" {...register('acceptedTerms')} />
-        <span>I accept the Terms and Conditions</span>
-      </label>
+      <div className="field checkbox-field">
+        <input
+          id={fieldIds.acceptedTerms}
+          type="checkbox"
+          className="checkbox-input"
+          {...register('acceptedTerms')}
+        />
+        <label className="checkbox-label" htmlFor={fieldIds.acceptedTerms}>
+          {TERMS_LABEL}
+        </label>
+      </div>
 
-      <div className="profile-form__actions">
-        <button type="submit" className="profile-form__submit">
+      <div className="form-footer">
+        <button type="submit" className="submit-button">
           Submit profile
         </button>
       </div>

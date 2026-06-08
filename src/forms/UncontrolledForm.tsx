@@ -1,28 +1,15 @@
 import { type FormEvent, useRef } from 'react';
 import { addSubmission } from '../store/submissionsSlice';
 import { useAppDispatch } from '../store/hooks';
-import type { FormSubmissionData, Gender } from '../types/submission';
+import { parseSubmissionData } from './shared/parseSubmissionData';
+import { createFieldIds, GENDER_OPTIONS, TERMS_LABEL } from './shared/formFields';
 import './UncontrolledForm.css';
 
 interface UncontrolledFormProps {
   onSuccess: () => void;
 }
 
-const GENDER_OPTIONS: { value: Gender; label: string }[] = [
-  { value: 'male', label: 'Male' },
-  { value: 'female', label: 'Female' },
-  { value: 'other', label: 'Other' },
-];
-
-function parseSubmissionData(formData: FormData): FormSubmissionData {
-  return {
-    name: String(formData.get('name') ?? '').trim(),
-    age: Number(formData.get('age')),
-    email: String(formData.get('email') ?? '').trim(),
-    gender: String(formData.get('gender') ?? '') as Gender,
-    acceptedTerms: formData.get('acceptedTerms') === 'on',
-  };
-}
+const fieldIds = createFieldIds('uncontrolled');
 
 export function UncontrolledForm({ onSuccess }: UncontrolledFormProps) {
   const dispatch = useAppDispatch();
@@ -47,26 +34,26 @@ export function UncontrolledForm({ onSuccess }: UncontrolledFormProps) {
       noValidate
       data-testid="uncontrolled-form"
     >
-      <div className="profile-form__field">
-        <label className="profile-form__label" htmlFor="uncontrolled-name">
+      <div className="field">
+        <label className="field-label" htmlFor={fieldIds.name}>
           Name
         </label>
         <input
-          id="uncontrolled-name"
-          className="profile-form__input"
+          id={fieldIds.name}
+          className="field-input"
           name="name"
           type="text"
           autoComplete="name"
         />
       </div>
 
-      <div className="profile-form__field">
-        <label className="profile-form__label" htmlFor="uncontrolled-age">
+      <div className="field">
+        <label className="field-label" htmlFor={fieldIds.age}>
           Age
         </label>
         <input
-          id="uncontrolled-age"
-          className="profile-form__input"
+          id={fieldIds.age}
+          className="field-input"
           name="age"
           type="number"
           min="0"
@@ -74,38 +61,52 @@ export function UncontrolledForm({ onSuccess }: UncontrolledFormProps) {
         />
       </div>
 
-      <div className="profile-form__field">
-        <label className="profile-form__label" htmlFor="uncontrolled-email">
+      <div className="field">
+        <label className="field-label" htmlFor={fieldIds.email}>
           Email
         </label>
         <input
-          id="uncontrolled-email"
-          className="profile-form__input"
+          id={fieldIds.email}
+          className="field-input"
           name="email"
           type="email"
           autoComplete="email"
         />
       </div>
 
-      <fieldset className="profile-form__fieldset">
-        <legend className="profile-form__legend">Gender</legend>
-        <div className="profile-form__radio-group">
+      <fieldset className="field-group">
+        <legend className="field-group-title">Gender</legend>
+        <div className="radio-options">
           {GENDER_OPTIONS.map((option) => (
-            <label key={option.value} className="profile-form__radio-option">
-              <input type="radio" name="gender" value={option.value} />
-              {option.label}
-            </label>
+            <div key={option.value} className="radio-option">
+              <input
+                id={fieldIds.gender(option.value)}
+                type="radio"
+                name="gender"
+                value={option.value}
+              />
+              <label className="radio-label" htmlFor={fieldIds.gender(option.value)}>
+                {option.label}
+              </label>
+            </div>
           ))}
         </div>
       </fieldset>
 
-      <label className="profile-form__checkbox-option">
-        <input type="checkbox" name="acceptedTerms" />
-        <span>I accept the Terms and Conditions</span>
-      </label>
+      <div className="field checkbox-field">
+        <input
+          id={fieldIds.acceptedTerms}
+          type="checkbox"
+          name="acceptedTerms"
+          className="checkbox-input"
+        />
+        <label className="checkbox-label" htmlFor={fieldIds.acceptedTerms}>
+          {TERMS_LABEL}
+        </label>
+      </div>
 
-      <div className="profile-form__actions">
-        <button type="submit" className="profile-form__submit">
+      <div className="form-footer">
+        <button type="submit" className="submit-button">
           Submit profile
         </button>
       </div>

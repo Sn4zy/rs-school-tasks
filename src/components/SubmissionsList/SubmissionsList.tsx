@@ -8,14 +8,14 @@ export function SubmissionsList() {
 
   if (submissions.length === 0) {
     return (
-      <div className="submissions-list__empty" aria-live="polite">
+      <div className="empty-state" aria-live="polite">
         Waiting for your first profile submission.
       </div>
     );
   }
 
   return (
-    <ul className="submissions-list" aria-live="polite">
+    <ul className="cards-grid" aria-live="polite">
       {submissions.map((submission) => (
         <li key={submission.id}>
           <SubmissionCard submission={submission} />

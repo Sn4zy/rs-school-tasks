@@ -7,8 +7,8 @@ export function SubmissionsSection() {
   const submissions = useAppSelector(selectAllSubmissions);
 
   return (
-    <section className="submissions-section" aria-labelledby="submissions-heading">
-      <div className="submissions-section__header">
+    <section className="submissions-panel" aria-labelledby="submissions-heading">
+      <div className="panel-header">
         <h2 id="submissions-heading">Submission history</h2>
         <p>
           {submissions.length === 0

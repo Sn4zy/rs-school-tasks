@@ -1,10 +1,10 @@
-.home-page {
+.page {
   width: min(100%, 72rem);
   margin: 0 auto;
   padding: 2.5rem 1.5rem 4rem;
 }
 
-.home-page__header {
+.hero {
   display: grid;
   gap: 1.75rem;
   padding: 2rem;
@@ -16,7 +16,7 @@
   box-shadow: var(--shadow-soft);
 }
 
-.home-page__eyebrow {
+.tagline {
   margin: 0 0 0.5rem;
   color: var(--accent);
   font-size: 0.875rem;
@@ -25,36 +25,36 @@
   text-transform: uppercase;
 }
 
-.home-page__title {
+.page-title {
   margin: 0;
   font-size: clamp(2rem, 4vw, 2.75rem);
   line-height: 1.1;
   color: var(--text-primary);
 }
 
-.home-page__subtitle {
+.page-description {
   max-width: 42rem;
   margin: 0.75rem 0 0;
   color: var(--text-muted);
   line-height: 1.6;
 }
 
-.home-page__actions {
+.open-form-buttons {
   display: flex;
   flex-wrap: wrap;
   gap: 0.875rem;
 }
 
 @media (max-width: 640px) {
-  .home-page {
+  .page {
     padding-top: 1.5rem;
   }
 
-  .home-page__header {
+  .hero {
     padding: 1.25rem;
   }
 
-  .home-page__actions {
+  .open-form-buttons {
     flex-direction: column;
   }
 }

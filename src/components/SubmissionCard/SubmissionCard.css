@@ -1,4 +1,4 @@
-.submission-card {
+.result-card {
   display: grid;
   gap: 1rem;
   padding: 1.25rem;
@@ -11,13 +11,13 @@
     box-shadow 300ms ease;
 }
 
-.submission-card--new {
+.result-card.is-new {
   border-color: var(--accent);
   background: rgb(14 165 233 / 8%);
   box-shadow: 0 0 0 1px rgb(14 165 233 / 18%);
 }
 
-.submission-card__header {
+.card-header {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -25,7 +25,7 @@
   gap: 0.75rem;
 }
 
-.submission-card__badge {
+.source-badge {
   display: inline-flex;
   align-items: center;
   min-height: 1.75rem;
@@ -37,34 +37,34 @@
   text-transform: uppercase;
 }
 
-.submission-card__badge--uncontrolled {
+.source-badge.uncontrolled {
   background: rgb(99 102 241 / 14%);
   color: #4338ca;
 }
 
-.submission-card__badge--hook-form {
+.source-badge.hook-form {
   background: rgb(16 185 129 / 14%);
   color: #047857;
 }
 
-.submission-card__date {
+.submitted-date {
   color: var(--text-muted);
   font-size: 0.875rem;
 }
 
-.submission-card__details {
+.card-details {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
   gap: 0.875rem;
   margin: 0;
 }
 
-.submission-card__detail {
+.detail-item {
   display: grid;
   gap: 0.25rem;
 }
 
-.submission-card__detail dt {
+.detail-item dt {
   color: var(--text-muted);
   font-size: 0.8125rem;
   font-weight: 600;
@@ -72,7 +72,7 @@
   letter-spacing: 0.04em;
 }
 
-.submission-card__detail dd {
+.detail-item dd {
   margin: 0;
   color: var(--text-primary);
   font-weight: 600;
