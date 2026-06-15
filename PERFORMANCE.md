@@ -4,13 +4,25 @@
 
 | Setting | Value |
 |---------|-------|
-| Branch | `performance` (unoptimized baseline) |
+| Branch | `performance` |
 | Build mode | Development (`npm run dev`) |
 | Browser | Chrome + React DevTools extension |
 | React version | 19.2.0 |
 | Dataset | 254 countries |
 
 See [profiling-workflow-guide.md](./profiling-workflow-guide.md) for profiling steps.
+
+---
+
+## Phase 2: Optimizations Applied
+
+| Technique | Where applied |
+|-----------|---------------|
+| `useMemo` | `app.tsx` (years, columns), `country-list.tsx` (filtered list), `country-card.tsx` (year data), `data-table.tsx` (record) |
+| `useCallback` | `app.tsx` (all event handlers) |
+| `React.memo` | `SearchBar`, `YearSelector`, `ColumnModal`, `CountryList`, `CountryCard`, `DataTable` |
+| Stable keys | `country.id` in virtualized list, `column` in data table rows |
+| Virtualization | `react-window` `List` in `CountryList` — only visible rows render |
 
 ---
 
@@ -25,13 +37,11 @@ See [profiling-workflow-guide.md](./profiling-workflow-guide.md) for profiling s
 | Selecting a different year | 32.4 ms | 32.4 ms | `YearSelector` (19.7 ms) |
 | Toggling columns | 40.1 ms | 40.1 ms | `YearSelector` (23.5 ms) |
 
-> Profiled in development mode. All interactions exceed the 16 ms frame budget. The sort interaction is the most expensive due to full list re-render.
+> Profiled in development mode before optimizations. Sorting re-rendered all 254 country cards.
 
 ---
 
 ### 1. Sorting Countries
-
-**Action:** Change sort field to "Name", then toggle Ascending/Descending.
 
 | Metric | Value |
 |--------|-------|
@@ -39,20 +49,11 @@ See [profiling-workflow-guide.md](./profiling-workflow-guide.md) for profiling s
 | Render duration | 165.3 ms |
 | Slowest component | `CountryList` — 138.1 ms |
 
-**Findings:**
-- `CountryList` re-filters and re-sorts all 254 countries on every sort change
-- Hundreds of `CountryCard` children re-render (visible as many small bars in flame chart)
-- No memoization — entire list subtree updates
-
-**Flame chart:**
-
-![Profiler — sorting](./screenshots/baseline/profiler-sort.png)
+![Baseline — sorting](./screenshots/baseline/profiler-sort.png)
 
 ---
 
 ### 2. Searching for a Country
-
-**Action:** Type `united` in the search box.
 
 | Metric | Value |
 |--------|-------|
@@ -60,20 +61,11 @@ See [profiling-workflow-guide.md](./profiling-workflow-guide.md) for profiling s
 | Render duration | 27.4 ms |
 | Slowest component | `YearSelector` — 18.2 ms |
 
-**Findings:**
-- Each keystroke updates `App` state and triggers a full tree re-render
-- `CountryList` and `CountryCard` still re-render on every keystroke
-- Filter runs on all countries with no `useMemo`
-
-**Flame chart:**
-
-![Profiler — search](./screenshots/baseline/profiler-search.png)
+![Baseline — search](./screenshots/baseline/profiler-search.png)
 
 ---
 
 ### 3. Selecting a Different Year
-
-**Action:** Change year from 2020 to 2010.
 
 | Metric | Value |
 |--------|-------|
@@ -81,20 +73,11 @@ See [profiling-workflow-guide.md](./profiling-workflow-guide.md) for profiling s
 | Render duration | 32.4 ms |
 | Slowest component | `YearSelector` — 19.7 ms |
 
-**Findings:**
-- `selectedYear` change in `App` re-renders the entire component tree
-- `YearSelector` and all `CountryCard` / `DataTable` components update
-- Each card recalculates year-specific data with no memoization
-
-**Flame chart:**
-
-![Profiler — year change](./screenshots/baseline/profiler-year.png)
+![Baseline — year change](./screenshots/baseline/profiler-year.png)
 
 ---
 
 ### 4. Toggling Columns
-
-**Action:** Open column modal and toggle one checkbox.
 
 | Metric | Value |
 |--------|-------|
@@ -102,39 +85,109 @@ See [profiling-workflow-guide.md](./profiling-workflow-guide.md) for profiling s
 | Render duration | 40.1 ms |
 | Slowest component | `YearSelector` — 23.5 ms |
 
-**Findings:**
-- `selectedColumns` change re-renders `ColumnModal` and all `DataTable` instances
-- Parent `App` state update causes unnecessary sibling re-renders
-- No `React.memo` on child components
-
-**Flame chart:**
-
-![Profiler — columns](./screenshots/baseline/profiler-columns.png)
+![Baseline — columns](./screenshots/baseline/profiler-columns.png)
 
 ---
 
 ## Phase 3: Optimized Profiling (Comparison)
 
-> To be completed after Phase 2 optimizations.
+### Summary
 
-| Interaction | Baseline Commit | Optimized Commit | Improvement (%) |
-|-------------|-----------------|------------------|-----------------|
-| Sorting countries | 165.3 ms | _TBD_ | _TBD_ |
-| Searching for a country | 27.4 ms | _TBD_ | _TBD_ |
-| Selecting a different year | 32.4 ms | _TBD_ | _TBD_ |
-| Toggling columns | 40.1 ms | _TBD_ | _TBD_ |
+| Interaction | Baseline | Optimized | Improvement |
+|-------------|----------|-----------|-------------|
+| Sorting countries | 165.3 ms | 17.1 ms | **89.7%** |
+| Searching for a country | 27.4 ms | 2.3 ms | **91.6%** |
+| Selecting a different year | 32.4 ms | 31.7 ms | **2.2%** |
+| Toggling columns | 40.1 ms | 7.4 ms | **81.5%** |
 
 ```
 Improvement (%) = ((baseline − optimized) / baseline) × 100
 ```
 
+> After optimization, sort and search dropped below the 16 ms frame budget. Memoization (grey striped components in flame charts) prevents `YearSelector` and `CountryList` from re-rendering when their props are unchanged.
+
 ---
 
-## Key Takeaways (Baseline)
+### 1. Sorting Countries
 
-1. **Sorting is the worst interaction** — 165 ms render with `CountryList` as the main bottleneck
-2. **Cascade re-renders** — any `App` state change re-renders the full component tree
-3. **No memoization** — no `useMemo`, `useCallback`, or `React.memo` in the starter code
-4. **No virtualization** — all 254 country cards are mounted in the DOM at once
+| Metric | Baseline | Optimized |
+|--------|----------|-----------|
+| Commit duration | 165.3 ms | 17.1 ms |
+| Render duration | 165.3 ms | 17.1 ms |
+| Slowest component | `CountryList` (138.1 ms) | `CountryCard` (~5.3 ms) |
 
-These findings guide the optimizations planned for Phase 2.
+**Improvement: 89.7%**
+
+**Findings:**
+- `useMemo` recalculates the sorted list without re-rendering unrelated components
+- Virtualization renders only visible `CountryRow` items instead of all 254 cards
+- `CountryRow (Memo)` label in flame chart confirms `React.memo` is working
+
+![Optimized — sorting](./screenshots/optimized/profiler-sort.png)
+
+---
+
+### 2. Searching for a Country
+
+| Metric | Baseline | Optimized |
+|--------|----------|-----------|
+| Commit duration | 27.4 ms | 2.3 ms |
+| Render duration | 27.4 ms | 2.3 ms |
+| Slowest component | `YearSelector` (18.2 ms) | `App` (1.2 ms) |
+
+**Improvement: 91.6%**
+
+**Findings:**
+- `YearSelector` is greyed out (did not re-render) — `React.memo` + stable `useCallback` handlers
+- Only `CountryList` and visible rows update on keystroke
+- Largest relative improvement of all interactions
+
+![Optimized — search](./screenshots/optimized/profiler-search.png)
+
+---
+
+### 3. Selecting a Different Year
+
+| Metric | Baseline | Optimized |
+|--------|----------|-----------|
+| Commit duration | 32.4 ms | 31.7 ms |
+| Render duration | 32.4 ms | 31.7 ms |
+| Slowest component | `YearSelector` (19.7 ms) | `YearSelector` (25.6 ms) |
+
+**Improvement: 2.2%**
+
+**Findings:**
+- Smallest improvement — `YearSelector` must re-render when its `year` prop changes
+- `YearSelector` still dominates because it renders hundreds of `<option>` elements
+- Virtualization limits `CountryCard` updates to visible rows only (not all 254)
+
+![Optimized — year change](./screenshots/optimized/profiler-year.png)
+
+---
+
+### 4. Toggling Columns
+
+| Metric | Baseline | Optimized |
+|--------|----------|-----------|
+| Commit duration | 40.1 ms | 7.4 ms |
+| Render duration | 40.1 ms | 7.4 ms |
+| Slowest component | `YearSelector` (23.5 ms) | `ColumnModal` |
+
+**Improvement: 81.5%**
+
+**Findings:**
+- `YearSelector` and `CountryList` are greyed out — they did not re-render
+- Only `ColumnModal` and visible `DataTable` instances update
+- `React.memo` on `CountryCard` / `DataTable` prevents off-screen cards from re-rendering
+
+![Optimized — columns](./screenshots/optimized/profiler-columns.png)
+
+---
+
+## Key Takeaways
+
+1. **Sorting improved 89.7%** — virtualization + `useMemo` had the biggest impact on the worst baseline interaction
+2. **Search improved 91.6%** — memoized siblings skip re-render on each keystroke
+3. **Columns improved 81.5%** — only the modal and visible tables update
+4. **Year change improved only 2.2%** — `YearSelector` with many options remains a bottleneck; further optimization could virtualize the year dropdown
+5. **Grey striped components** in optimized flame charts confirm `React.memo` is preventing unnecessary re-renders
