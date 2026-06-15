@@ -1,3 +1,8 @@
 .countryList {
   padding: 16px;
 }
+
+.listItem {
+  box-sizing: border-box;
+  padding: 0 4px 16px;
+}
