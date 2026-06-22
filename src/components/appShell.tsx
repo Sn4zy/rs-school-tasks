@@ -1,16 +1,20 @@
-import { Outlet } from 'react-router-dom'
+'use client'
+
+import type { ReactNode } from 'react'
 
 import '../styles/appShell.css'
 import Header from './header.tsx'
 import SelectedItemsFlyout from './selectedItemsFlyout.tsx'
 
-export default function AppShell() {
+type Props = {
+  children: ReactNode
+}
+
+export default function AppShell({ children }: Props) {
   return (
     <div className="app-shell">
       <Header />
-      <div className="app-content">
-        <Outlet />
-      </div>
+      <div className="app-content">{children}</div>
       <SelectedItemsFlyout />
     </div>
   )

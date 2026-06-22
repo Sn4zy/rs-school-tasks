@@ -1,4 +1,6 @@
-import { useNavigate, useSearchParams } from 'react-router-dom'
+'use client'
+
+import { useRouter, useSearchParams } from 'next/navigation'
 
 import {
   pokemonApi,
@@ -20,7 +22,7 @@ interface ContentProps {
 
 function PokemonDetailsContent({ detailsId, page }: ContentProps) {
   const dispatch = useAppDispatch()
-  const navigate = useNavigate()
+  const router = useRouter()
   const { data: pokemon, isLoading, isFetching, error, refetch } =
     usePokemonDetailsQuery(detailsId)
   const isBusy = isLoading || isFetching
@@ -32,7 +34,7 @@ function PokemonDetailsContent({ detailsId, page }: ContentProps) {
   }
 
   const closeDetails = () => {
-    navigate({ pathname: '/', search: buildListSearch(page) })
+    router.push(`/${buildListSearch(page)}`)
   }
 
   return (
@@ -75,9 +77,9 @@ function PokemonDetailsContent({ detailsId, page }: ContentProps) {
 }
 
 export default function PokemonDetailsPanel() {
-  const [searchParams] = useSearchParams()
-  const detailsId = searchParams.get('details')
-  const page = parsePageParam(searchParams.get('page'))
+  const searchParams = useSearchParams()
+  const detailsId = searchParams?.get('details') ?? null
+  const page = parsePageParam(searchParams?.get('page') ?? null)
 
   if (!detailsId) {
     return null

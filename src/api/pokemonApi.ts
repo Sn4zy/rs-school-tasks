@@ -11,7 +11,7 @@ import type {
 const DEFAULT_TTL_MS = 60_000
 
 function ttlSecondsFromEnv(): number {
-  const raw = import.meta.env.VITE_API_CACHE_TTL_MS
+  const raw = process.env.NEXT_PUBLIC_API_CACHE_TTL_MS
   const parsed = typeof raw === 'string' ? Number(raw) : Number.NaN
   const ttlMs = Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_TTL_MS
   return Math.max(0, Math.floor(ttlMs / 1000))

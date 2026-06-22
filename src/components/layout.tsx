@@ -1,5 +1,7 @@
-import { useCallback, useEffect, type MouseEvent } from 'react'
-import { Outlet, useMatch, useNavigate, useSearchParams } from 'react-router-dom'
+'use client'
+
+import { useCallback, useEffect, type MouseEvent, type ReactNode } from 'react'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 import { buildListSearch, parsePageParam } from '../utils/urlParams.ts'
 import '../styles/layout.css'
@@ -10,57 +12,50 @@ import Search from './search.tsx'
 interface Props {
   committedQuery: string
   onCommitSearch: (trimmed: string) => void
+  children: ReactNode
 }
 
-export default function Layout({ committedQuery, onCommitSearch }: Props) {
-  const navigate = useNavigate()
-  const [searchParams, setSearchParams] = useSearchParams()
-  const detailsRoute = useMatch('/details')
-  const page = parsePageParam(searchParams.get('page'))
-  const detailsParam = searchParams.get('details')
+export default function Layout({ committedQuery, onCommitSearch, children }: Props) {
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const page = parsePageParam(searchParams?.get('page') ?? null)
+  const detailsParam = searchParams?.get('details') ?? null
   const selectedId =
     detailsParam !== null && detailsParam !== ''
       ? Number.parseInt(detailsParam, 10)
       : null
   const showDetailsPanel =
-    detailsRoute !== null &&
+    pathname === '/details' &&
     selectedId !== null &&
     !Number.isNaN(selectedId)
 
   useEffect(() => {
-    if (!searchParams.get('page')) {
-      setSearchParams(
-        (prev) => {
-          const next = new URLSearchParams(prev)
-          next.set('page', '1')
-          return next
-        },
-        { replace: true },
-      )
+    if (!searchParams?.get('page')) {
+      const params = new URLSearchParams(searchParams?.toString() ?? '')
+      params.set('page', '1')
+      router.replace(`${pathname}?${params.toString()}`)
     }
-  }, [searchParams, setSearchParams])
+  }, [searchParams, router, pathname])
 
   const commitSearch = useCallback(
     (trimmed: string) => {
       onCommitSearch(trimmed)
-      navigate({ pathname: '/', search: buildListSearch(1) })
+      router.push(`/${buildListSearch(1)}`)
     },
-    [onCommitSearch, navigate],
+    [onCommitSearch, router],
   )
 
   const openDetails = useCallback(
     (id: number) => {
-      navigate({
-        pathname: '/details',
-        search: buildListSearch(page, String(id)),
-      })
+      router.push(`/details${buildListSearch(page, String(id))}`)
     },
-    [navigate, page],
+    [router, page],
   )
 
   const closeDetails = useCallback(() => {
-    navigate({ pathname: '/', search: buildListSearch(page) })
-  }, [navigate, page])
+    router.push(`/${buildListSearch(page)}`)
+  }, [router, page])
 
   const handleMainPanelClick = (event: MouseEvent<HTMLElement>) => {
     if (!showDetailsPanel) {
@@ -94,9 +89,7 @@ export default function Layout({ committedQuery, onCommitSearch }: Props) {
         </section>
 
         {showDetailsPanel && (
-          <section className="results-area results-area--details">
-            <Outlet />
-          </section>
+          <section className="results-area results-area--details">{children}</section>
         )}
       </div>
 

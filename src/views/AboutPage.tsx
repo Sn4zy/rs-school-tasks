@@ -1,7 +1,7 @@
-import { Link } from 'react-router-dom'
+import Link from 'next/link'
 
-import '../styles/aboutPage.css'
-import '../styles/nav.css'
+import '@/styles/aboutPage.css'
+import '@/styles/nav.css'
 
 export default function AboutPage() {
   return (
@@ -25,7 +25,7 @@ export default function AboutPage() {
       </section>
 
       <p>
-        <Link to={{ pathname: '/', search: '?page=1' }} className="nav-link">
+        <Link href="/?page=1" className="nav-link">
           Back to Pokedex
         </Link>
       </p>

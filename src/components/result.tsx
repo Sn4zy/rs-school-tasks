@@ -1,4 +1,6 @@
-import { useSearchParams } from 'react-router-dom'
+'use client'
+
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 import {
   pokemonApi,
@@ -26,8 +28,10 @@ function trim(value: string | undefined) {
 
 export default function Result({ query, selectedId, onSelectPokemon }: Props) {
   const dispatch = useAppDispatch()
-  const [searchParams, setSearchParams] = useSearchParams()
-  const page = parsePageParam(searchParams.get('page'))
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const page = parsePageParam(searchParams?.get('page') ?? null)
 
   const normalizedQuery = trim(query)
   const pagingOn = normalizedQuery === ''
@@ -41,12 +45,9 @@ export default function Result({ query, selectedId, onSelectPokemon }: Props) {
   }
 
   const goToPage = (nextPage: number) => {
-    const nextParams: Record<string, string> = { page: String(nextPage) }
-    const details = searchParams.get('details')
-    if (details) {
-      nextParams.details = details
-    }
-    setSearchParams(nextParams)
+    const params = new URLSearchParams(searchParams?.toString() ?? '')
+    params.set('page', String(nextPage))
+    router.push(`${pathname}?${params.toString()}`)
   }
 
   const isBusy = isLoading || isFetching

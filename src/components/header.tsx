@@ -1,5 +1,8 @@
+'use client'
+
 import type { ChangeEvent } from 'react'
-import { NavLink } from 'react-router-dom'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 
 import type { Theme } from '../context/themeContext.ts'
 import { useTheme } from '../context/useTheme.ts'
@@ -8,6 +11,9 @@ import '../styles/nav.css'
 
 export default function Header() {
   const { theme, setTheme } = useTheme()
+  const pathname = usePathname()
+  const isHome = pathname === '/'
+  const isAbout = pathname === '/about'
 
   const handleThemeChange = (event: ChangeEvent<HTMLSelectElement>) => {
     setTheme(event.target.value as Theme)
@@ -18,12 +24,20 @@ export default function Header() {
       <h1>Pokedex</h1>
       <div className="app-header__controls">
         <nav className="app-nav" aria-label="Main navigation">
-          <NavLink to={{ pathname: '/', search: '?page=1' }} className="nav-link" end>
+          <Link
+            href="/?page=1"
+            className={`nav-link${isHome ? ' active' : ''}`}
+            aria-current={isHome ? 'page' : undefined}
+          >
             Home
-          </NavLink>
-          <NavLink to="/about" className="nav-link">
+          </Link>
+          <Link
+            href="/about"
+            className={`nav-link${isAbout ? ' active' : ''}`}
+            aria-current={isAbout ? 'page' : undefined}
+          >
             About
-          </NavLink>
+          </Link>
         </nav>
 
         <label className="theme-select-label">
