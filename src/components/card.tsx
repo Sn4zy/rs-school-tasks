@@ -13,10 +13,18 @@ import '../styles/card.css'
 type Props = {
   pokemon: PokemonDetails
   detailsOpenId: number | null
-  onOpenDetails: (id: number) => void
+  page: number
+  query: string
+  openDetailsAction: (formData: FormData) => void | Promise<void>
 }
 
-export default function Card({ pokemon, detailsOpenId, onOpenDetails }: Props) {
+export default function Card({
+  pokemon,
+  detailsOpenId,
+  page,
+  query,
+  openDetailsAction,
+}: Props) {
   const t = useTranslations('card')
   const { id, name, sprite, flavorText } = pokemon
   const dispatch = useAppDispatch()
@@ -32,19 +40,21 @@ export default function Card({ pokemon, detailsOpenId, onOpenDetails }: Props) {
   }
 
   const handleOpenDetails = () => {
-    onOpenDetails(id)
+    const formData = new FormData()
+    formData.set('detailsId', String(id))
+    formData.set('page', String(page))
+    formData.set('q', query)
+    void openDetailsAction(formData)
   }
 
-  const handleBodyKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+  const handleBodyKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault()
       handleOpenDetails()
     }
   }
 
-  const selectLabel = name
-    ? t('select', { name })
-    : t('selectFallback')
+  const selectLabel = name ? t('select', { name }) : t('selectFallback')
 
   return (
     <article
@@ -60,17 +70,16 @@ export default function Card({ pokemon, detailsOpenId, onOpenDetails }: Props) {
         onClick={handleCheckboxClick}
         aria-label={selectLabel}
       />
-      <div
+      <button
+        type="button"
         className="pokemon-card__body"
-        role="button"
-        tabIndex={0}
         onClick={handleOpenDetails}
         onKeyDown={handleBodyKeyDown}
       >
         <PokemonSprite src={sprite} />
         <h3 className="pokemon-name">{name}</h3>
         <p className="pokemon-description">{flavorText}</p>
-      </div>
+      </button>
     </article>
   )
 }

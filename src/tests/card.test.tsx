@@ -1,11 +1,12 @@
-import { screen } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
+import { openPokemonDetailsAction } from '@/actions/pokedex'
 import type { PokemonDetails } from '../../types/index.ts'
 import Card from '../components/card.tsx'
 import { selectIsItemSelected } from '../store/selectedItemsSlice.ts'
 import { setupStore } from '../store/store.ts'
-import { renderWithProviders } from './testUtils.tsx'
+import { renderWithProviders, renderWithSearchParams } from './testUtils.tsx'
 
 const pikachu: PokemonDetails = {
   id: 25,
@@ -23,7 +24,9 @@ function renderCard(
     <Card
       pokemon={pikachu}
       detailsOpenId={null}
-      onOpenDetails={() => {}}
+      page={1}
+      query=""
+      openDetailsAction={openPokemonDetailsAction}
       {...props}
     />,
     { store },
@@ -76,14 +79,25 @@ describe('Card', () => {
       expect(screen.getByRole('article')).toHaveClass('pokemon-card--selected')
     })
 
-    it('calls onOpenDetails when the card body is clicked', async () => {
+    it('submits the open-details server action when the card body is clicked', async () => {
       const user = userEvent.setup()
-      const onOpenDetails = vi.fn()
-      renderCard({ onOpenDetails })
+      const { router } = renderWithSearchParams(
+        <Card
+          pokemon={pikachu}
+          detailsOpenId={null}
+          page={1}
+          query=""
+          openDetailsAction={openPokemonDetailsAction}
+        />,
+        ['/?page=1'],
+      )
 
       await user.click(screen.getByRole('heading', { level: 3 }))
 
-      expect(onOpenDetails).toHaveBeenCalledWith(25)
+      await waitFor(() => {
+        expect(router.state.location.pathname).toBe('/details')
+        expect(router.state.location.search).toContain('details=25')
+      })
     })
   })
 })

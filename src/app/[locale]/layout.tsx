@@ -18,6 +18,12 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params
+
+  if (!hasLocale(routing.locales, locale)) {
+    return {}
+  }
+
+  setRequestLocale(locale)
   const t = await getTranslations({ locale, namespace: 'app' })
 
   return {

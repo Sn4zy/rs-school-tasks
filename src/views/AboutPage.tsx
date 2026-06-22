@@ -1,10 +1,15 @@
-import { getTranslations } from 'next-intl/server'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 import { Link } from '@/i18n/navigation'
 import '@/styles/aboutPage.css'
 import '@/styles/nav.css'
 
-export default async function AboutPage() {
+type Props = {
+  locale: string
+}
+
+export default async function AboutPage({ locale }: Props) {
+  setRequestLocale(locale)
   const t = await getTranslations('about')
   const nav = await getTranslations('nav')
 

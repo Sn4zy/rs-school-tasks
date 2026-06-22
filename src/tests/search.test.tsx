@@ -1,27 +1,15 @@
 import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import type { MockedFunction } from 'vitest'
 
-import Search from '../components/search.tsx'
+import SearchForm from '../components/searchForm.tsx'
 import { SEARCH_STORAGE_KEY } from '../utils/searchStorage.ts'
 import { renderWithProviders } from './testUtils.tsx'
 
-function setup(options: {
-  committedQuery?: string
-  onCommittedSearch?: MockedFunction<(trimmed: string) => void>
-} = {}) {
-  const onCommittedSearch: MockedFunction<(trimmed: string) => void> =
-    options.onCommittedSearch ?? vi.fn()
-  renderWithProviders(
-    <Search
-      committedQuery={options.committedQuery ?? ''}
-      onCommittedSearch={onCommittedSearch}
-    />,
-  )
-  return { onCommittedSearch }
+function setup(options: { query?: string } = {}) {
+  renderWithProviders(<SearchForm query={options.query ?? ''} />)
 }
 
-describe('Search', () => {
+describe('SearchForm', () => {
   beforeEach(() => {
     localStorage.clear()
     vi.clearAllMocks()
@@ -37,7 +25,7 @@ describe('Search', () => {
 
     it('displays previously saved search term from localStorage on mount', async () => {
       localStorage.setItem(SEARCH_STORAGE_KEY, 'charizard')
-      setup({ committedQuery: '' })
+      setup({ query: '' })
 
       const input = screen.getByRole('textbox', { name: /pokémon name/i })
       await waitFor(() => {
@@ -46,7 +34,7 @@ describe('Search', () => {
     })
 
     it('shows empty input when no saved term exists', async () => {
-      setup({ committedQuery: '' })
+      setup({ query: '' })
 
       const input = screen.getByRole('textbox', { name: /pokémon name/i })
       await waitFor(() => {
@@ -69,7 +57,7 @@ describe('Search', () => {
 
     it('saves search term to localStorage when search button is clicked', async () => {
       const user = userEvent.setup()
-      setup({ committedQuery: '' })
+      setup({ query: '' })
 
       const input = screen.getByRole('textbox', { name: /pokémon name/i })
       await waitFor(() => expect(input).toHaveValue(''))
@@ -82,8 +70,7 @@ describe('Search', () => {
 
     it('trims whitespace from search input before saving', async () => {
       const user = userEvent.setup()
-      const onCommittedSearch = vi.fn()
-      setup({ committedQuery: '', onCommittedSearch })
+      setup({ query: '' })
 
       const input = screen.getByRole('textbox', { name: /pokémon name/i })
       await waitFor(() => expect(input).toHaveValue(''))
@@ -92,40 +79,23 @@ describe('Search', () => {
       await user.click(screen.getByRole('button', { name: /^search$/i }))
 
       expect(localStorage.getItem(SEARCH_STORAGE_KEY)).toBe('mewtwo')
-      expect(onCommittedSearch).toHaveBeenCalledWith('mewtwo')
-    })
-
-    it('triggers search callback with correct parameters', async () => {
-      const user = userEvent.setup()
-      const onCommittedSearch = vi.fn()
-      setup({ committedQuery: '', onCommittedSearch })
-
-      const input = screen.getByRole('textbox', { name: /pokémon name/i })
-      await waitFor(() => expect(input).toHaveValue(''))
-
-      await user.type(input, 'snorlax')
-      await user.click(screen.getByRole('button', { name: /^search$/i }))
-
-      expect(onCommittedSearch).toHaveBeenCalledWith('snorlax')
     })
   })
 
   describe('localStorage integration', () => {
     it('retrieves saved search term on component mount', async () => {
       localStorage.setItem(SEARCH_STORAGE_KEY, 'squirtle')
-      const onCommittedSearch = vi.fn()
-      setup({ committedQuery: '', onCommittedSearch })
+      setup({ query: '' })
 
       await waitFor(() => {
         expect(screen.getByRole('textbox', { name: /pokémon name/i })).toHaveValue('squirtle')
       })
-      expect(onCommittedSearch).toHaveBeenCalledWith('squirtle')
     })
 
     it('overwrites existing localStorage value when new search is performed', async () => {
       const user = userEvent.setup()
       localStorage.setItem(SEARCH_STORAGE_KEY, 'old-term')
-      setup({ committedQuery: 'old-term' })
+      setup({ query: 'old-term' })
 
       const input = screen.getByRole('textbox', { name: /pokémon name/i })
       await waitFor(() => expect(input).toHaveValue('old-term'))

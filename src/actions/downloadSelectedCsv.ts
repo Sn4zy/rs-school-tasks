@@ -7,6 +7,7 @@ import {
   buildSelectedItemsCsv,
   getSelectedItemsCsvFilename,
 } from '@/utils/downloadSelectedCsv'
+import { routing } from '@/i18n/routing'
 
 export type SelectedItemsCsvResult = {
   csv: string
@@ -27,6 +28,7 @@ async function getRequestOrigin(): Promise<string> {
 
 export async function generateSelectedItemsCsvAction(
   items: PokemonDetails[],
+  locale: string = routing.defaultLocale,
 ): Promise<SelectedItemsCsvResult | null> {
   if (items.length === 0) {
     return null
@@ -35,7 +37,7 @@ export async function generateSelectedItemsCsvAction(
   const origin = await getRequestOrigin()
 
   return {
-    csv: buildSelectedItemsCsv(items, origin),
+    csv: buildSelectedItemsCsv(items, origin, locale),
     filename: getSelectedItemsCsvFilename(items.length),
   }
 }

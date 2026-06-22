@@ -1,10 +1,15 @@
-import { getTranslations } from 'next-intl/server'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 import { Link } from '@/i18n/navigation'
 import '@/styles/nav.css'
 import '@/styles/notFoundPage.css'
 
-export default async function NotFoundPage() {
+type Props = {
+  locale: string
+}
+
+export default async function NotFoundPage({ locale }: Props) {
+  setRequestLocale(locale)
   const t = await getTranslations('notFound')
   const nav = await getTranslations('nav')
 

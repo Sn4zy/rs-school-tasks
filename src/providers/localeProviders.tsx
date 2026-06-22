@@ -15,7 +15,7 @@ type Props = {
 
 export default function LocaleProviders({ children, locale, messages }: Props) {
   return (
-    <NextIntlClientProvider locale={locale} messages={messages}>
+    <NextIntlClientProvider locale={locale} messages={messages} timeZone="UTC">
       <AppProviders>
         <AppShell>{children}</AppShell>
       </AppProviders>

@@ -1,4 +1,5 @@
 import js from '@eslint/js'
+import nextPlugin from '@next/eslint-plugin-next'
 import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'
 import reactPlugin from 'eslint-plugin-react'
@@ -9,6 +10,7 @@ import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
   globalIgnores(['dist', 'coverage', '.next', 'next-env.d.ts', 'src/setupTests.ts', 'src/tests/**', 'vitest.config.ts']),
+  nextPlugin.flatConfig.coreWebVitals,
   {
     files: ['**/*.{ts,tsx}'],
     extends: [

@@ -12,5 +12,5 @@ export default async function AboutRoute({ params }: Props) {
   const { locale } = await params
   setRequestLocale(locale)
 
-  return <AboutPage />
+  return <AboutPage locale={locale} />
 }

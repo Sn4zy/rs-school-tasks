@@ -1,21 +1,17 @@
-import { screen, within } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 
 import type { PokemonDetails } from '../../types/index.ts'
-import type { SearchPokemonArg } from '../api/pokemonApi.ts'
-import Result from '../components/result.tsx'
+import SearchResultsClient from '../components/searchResultsClient.tsx'
 import { renderWithSearchParams } from './testUtils.tsx'
 
-const { useSearchPokemonQueryMock } = vi.hoisted(() => ({
-  useSearchPokemonQueryMock: vi.fn(),
+const { searchPokemonMock } = vi.hoisted(() => ({
+  searchPokemonMock: vi.fn(),
 }))
 
-vi.mock('../api/pokemonApi.ts', async () => {
-  const actual = await vi.importActual<typeof import('../api/pokemonApi.ts')>('../api/pokemonApi.ts')
-  return {
-    ...actual,
-    useSearchPokemonQuery: (arg: SearchPokemonArg) => useSearchPokemonQueryMock(arg),
-  }
-})
+vi.mock('../../api/pokemon.ts', () => ({
+  searchPokemon: (query: string, page?: number) => searchPokemonMock(query, page),
+  fetchPokemonDetails: vi.fn(),
+}))
 
 function sampleItems(count: number): PokemonDetails[] {
   return Array.from({ length: count }, (_, i) => ({
@@ -28,25 +24,19 @@ function sampleItems(count: number): PokemonDetails[] {
 
 function renderResult(query = '') {
   return renderWithSearchParams(
-    <Result query={query} selectedId={null} onSelectPokemon={vi.fn()} />,
+    <SearchResultsClient page={1} query={query} selectedId={null} />,
     ['/?page=1'],
   )
 }
 
-describe('Result', () => {
+describe('SearchResultsClient', () => {
   beforeEach(() => {
-    useSearchPokemonQueryMock.mockReset()
+    searchPokemonMock.mockReset()
   })
 
   describe('rendering', () => {
     it('renders correct number of items when data is provided', async () => {
-      const items = sampleItems(3)
-      useSearchPokemonQueryMock.mockReturnValue({
-        data: items,
-        isLoading: false,
-        isFetching: false,
-        error: undefined,
-      })
+      searchPokemonMock.mockResolvedValue(sampleItems(3))
 
       renderResult()
 
@@ -54,145 +44,41 @@ describe('Result', () => {
     })
 
     it('displays "no results" message when data array is empty', async () => {
-      useSearchPokemonQueryMock.mockReturnValue({
-        data: [],
-        isLoading: false,
-        isFetching: false,
-        error: undefined,
-      })
+      searchPokemonMock.mockResolvedValue([])
 
       renderResult()
 
       expect(await screen.findByText('No items found.')).toBeInTheDocument()
     })
-
-    it('shows loading state while fetching data', () => {
-      useSearchPokemonQueryMock.mockReturnValue({
-        data: undefined,
-        isLoading: true,
-        isFetching: true,
-        error: undefined,
-      })
-
-      renderResult()
-
-      expect(screen.getByText('Loading…')).toBeInTheDocument()
-      expect(screen.queryByText('No items found.')).not.toBeInTheDocument()
-    })
   })
 
-  describe('data display', () => {
-    it('correctly displays item names and descriptions', async () => {
-      useSearchPokemonQueryMock.mockReturnValue({
-        data: [
-        {
-          id: 25,
-          name: 'pikachu',
-          sprite: 'https://example.com/pikachu.png',
-          flavorText: 'It stores electricity in its cheeks.',
-        },
-        {
-          id: 1,
-          name: 'bulbasaur',
-          sprite: 'https://example.com/bulbasaur.png',
-          flavorText: 'A strange seed was planted on its back at birth.',
-        },
-        ],
-        isLoading: false,
-        isFetching: false,
-        error: undefined,
-      })
+  describe('pagination', () => {
+    it('shows pagination controls for empty query', async () => {
+      searchPokemonMock.mockResolvedValue(sampleItems(2))
 
       renderResult()
 
-      const articles = await screen.findAllByRole('article')
-      expect(articles).toHaveLength(2)
-
-      expect(within(articles[0]).getByRole('heading', { level: 3 })).toHaveTextContent('pikachu')
-      expect(within(articles[0]).getByText('It stores electricity in its cheeks.')).toBeInTheDocument()
-
-      expect(within(articles[1]).getByRole('heading', { level: 3 })).toHaveTextContent('bulbasaur')
-      expect(
-        within(articles[1]).getByText('A strange seed was planted on its back at birth.'),
-      ).toBeInTheDocument()
+      expect(await screen.findByRole('link', { name: /next/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /previous/i })).toBeDisabled()
     })
 
-    it('handles missing or undefined data gracefully', async () => {
-      useSearchPokemonQueryMock.mockReturnValue({
-        data: [
-          {
-            id: 99,
-            name: '',
-            sprite: '',
-            flavorText: '',
-          },
-        ],
-        isLoading: false,
-        isFetching: false,
-        error: undefined,
-      })
+    it('hides pagination controls for non-empty query', async () => {
+      searchPokemonMock.mockResolvedValue(sampleItems(1))
 
-      renderResult()
+      renderResult('pikachu')
 
-      const article = await screen.findByRole('article')
-      expect(within(article).getByRole('heading', { level: 3 })).toHaveTextContent('')
-      expect(within(article).getByRole('paragraph')).toHaveTextContent('')
+      expect(await screen.findByRole('article')).toBeInTheDocument()
+      expect(screen.queryByRole('link', { name: /next/i })).not.toBeInTheDocument()
     })
   })
 
   describe('error handling', () => {
-    it('displays error message when API call fails', async () => {
-      useSearchPokemonQueryMock.mockReturnValue({
-        data: undefined,
-        isLoading: false,
-        isFetching: false,
-        error: { data: 'Network failure' },
-      })
+    it('shows error panel when API call fails', async () => {
+      searchPokemonMock.mockRejectedValue(new Error('Network error'))
 
       renderResult()
 
-      expect(await screen.findByText('Network failure')).toBeInTheDocument()
-    })
-
-    it('shows appropriate error for 4xx-style API failure', async () => {
-      useSearchPokemonQueryMock.mockReturnValue({
-        data: undefined,
-        isLoading: false,
-        isFetching: false,
-        error: { data: 'Failed to fetch Pokemon details: Not Found' },
-      })
-
-      renderResult('missingmon')
-
-      expect(await screen.findByText('Failed to fetch Pokemon details: Not Found')).toBeInTheDocument()
-    })
-
-    it('shows appropriate error for 5xx-style API failure', async () => {
-      useSearchPokemonQueryMock.mockReturnValue({
-        data: undefined,
-        isLoading: false,
-        isFetching: false,
-        error: { data: 'Failed to fetch Pokemon list: Internal Server Error' },
-      })
-
-      renderResult()
-
-      expect(
-        await screen.findByText('Failed to fetch Pokemon list: Internal Server Error'),
-      ).toBeInTheDocument()
-    })
-
-    it('displays fallback message when rejection is not an Error instance', async () => {
-      useSearchPokemonQueryMock.mockReturnValue({
-        data: undefined,
-        isLoading: false,
-        isFetching: false,
-        error: {},
-      })
-
-      renderResult()
-
-      expect(await screen.findByText('Could not load data.')).toBeInTheDocument()
+      expect(await screen.findByText('Network error')).toBeInTheDocument()
     })
   })
 })

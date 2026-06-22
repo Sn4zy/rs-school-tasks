@@ -2,8 +2,8 @@
 
 import AboutPageClient from '@/views/AboutPageClient'
 import NotFoundPageClient from '@/views/NotFoundPageClient'
-import PokedexLayoutClient from '@/app/[locale]/(shell)/(pokedex)/pokedexLayoutClient'
-import PokemonDetailsPanel from '@/components/pokemonDetailsPanel'
+import PokedexShellClient from '@/components/pokedexShellClient'
+import PokemonDetailsPanelClient from '@/components/pokemonDetailsPanelClient'
 import { usePathname } from '@/i18n/navigation'
 
 export default function AppRoutesClient() {
@@ -15,14 +15,14 @@ export default function AppRoutesClient() {
 
   if (pathname === '/details') {
     return (
-      <PokedexLayoutClient>
-        <PokemonDetailsPanel />
-      </PokedexLayoutClient>
+      <PokedexShellClient>
+        <PokemonDetailsPanelClient />
+      </PokedexShellClient>
     )
   }
 
   if (pathname === '/') {
-    return <PokedexLayoutClient>{null}</PokedexLayoutClient>
+    return <PokedexShellClient>{null}</PokedexShellClient>
   }
 
   return <NotFoundPageClient />

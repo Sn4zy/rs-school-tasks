@@ -6,5 +6,5 @@ export default async function NotFound() {
   const locale = await getLocale()
   setRequestLocale(locale)
 
-  return <NotFoundPage />
+  return <NotFoundPage locale={locale} />
 }

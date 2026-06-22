@@ -125,3 +125,28 @@ vi.mock('@/i18n/navigation.ts', () => {
     getPathname: vi.fn(),
   }
 })
+
+vi.mock('@/actions/pokedex.ts', async () => {
+  const mockRouter = require('next-router-mock').default
+  const { buildHomePath, buildDetailsPath } = await import('./utils/urlParams.ts')
+
+  return {
+    submitSearchAction: async (_prevState: unknown, formData: FormData) => {
+      const query = String(formData.get('q') ?? '').trim()
+      await mockRouter.push(buildHomePath(1, null, query))
+      return null
+    },
+    openPokemonDetailsAction: async (formData: FormData) => {
+      const detailsId = String(formData.get('detailsId') ?? '')
+      const page = Number.parseInt(String(formData.get('page') ?? '1'), 10)
+      const query = String(formData.get('q') ?? '').trim()
+      await mockRouter.push(buildDetailsPath(page, detailsId, query))
+    },
+    closePokemonDetailsAction: async (formData: FormData) => {
+      const page = Number.parseInt(String(formData.get('page') ?? '1'), 10)
+      const query = String(formData.get('q') ?? '').trim()
+      await mockRouter.push(buildHomePath(page, null, query))
+    },
+    refreshSearchAction: async () => {},
+  }
+})

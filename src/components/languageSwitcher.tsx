@@ -2,6 +2,7 @@
 
 import type { ChangeEvent } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
+import { useSearchParams } from 'next/navigation'
 
 import { usePathname, useRouter } from '@/i18n/navigation.ts'
 import { routing, type AppLocale } from '@/i18n/routing.ts'
@@ -12,9 +13,14 @@ export default function LanguageSwitcher() {
   const locale = useLocale() as AppLocale
   const router = useRouter()
   const pathname = usePathname()
+  const searchParams = useSearchParams()
 
   const handleChange = (event: ChangeEvent<HTMLSelectElement>) => {
-    router.replace(pathname, { locale: event.target.value as AppLocale })
+    const query = Object.fromEntries((searchParams ?? new URLSearchParams()).entries())
+    const href =
+      Object.keys(query).length > 0 ? { pathname, query } : pathname
+
+    router.replace(href, { locale: event.target.value as AppLocale })
   }
 
   return (

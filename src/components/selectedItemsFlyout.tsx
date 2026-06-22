@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 
 import { generateSelectedItemsCsvAction } from '@/actions/downloadSelectedCsv'
 import { triggerCsvDownload } from '@/utils/triggerCsvDownload'
@@ -12,6 +12,7 @@ import '../styles/selectedItemsFlyout.css'
 
 export default function SelectedItemsFlyout() {
   const t = useTranslations('flyout')
+  const locale = useLocale()
   const dispatch = useAppDispatch()
   const selectedCount = useAppSelector(selectSelectedCount)
   const selectedItems = useAppSelector(selectSelectedItems)
@@ -29,7 +30,7 @@ export default function SelectedItemsFlyout() {
     setIsDownloading(true)
 
     try {
-      const result = await generateSelectedItemsCsvAction(selectedItems)
+      const result = await generateSelectedItemsCsvAction(selectedItems, locale)
 
       if (result) {
         triggerCsvDownload(result.csv, result.filename)

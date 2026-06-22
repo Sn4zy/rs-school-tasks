@@ -1,50 +1,62 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
+import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 
-import {
-  pokemonApi,
-  pokemonDetailsCacheTag,
-  usePokemonDetailsQuery,
-} from '../api/pokemonApi.ts'
-import { useRouter } from '@/i18n/navigation.ts'
-import { useAppDispatch } from '../store/hooks.ts'
-import { getReadableQueryError } from '../utils/rtkQueryError.ts'
-import { buildHomePath, parsePageParam } from '../utils/urlParams.ts'
+import { closePokemonDetailsAction } from '@/actions/pokedex'
+import { fetchPokemonDetails } from '../../api/pokemon.ts'
+import type { PokemonDetails } from '../../types/index.ts'
+import { parsePageParam, parseQueryParam } from '@/utils/urlParams'
 import '../styles/card.css'
 import '../styles/error-shared.css'
 import '../styles/pokemonDetailsPanel.css'
 import Loading from './Loading.tsx'
 import PokemonSprite from './pokemonSprite.tsx'
 
-interface ContentProps {
+type ContentProps = {
   detailsId: string
   page: number
+  query: string
 }
 
-function PokemonDetailsContent({ detailsId, page }: ContentProps) {
+function PokemonDetailsContent({ detailsId, page, query }: ContentProps) {
   const t = useTranslations('details')
-  const errorsT = useTranslations('errors')
-  const dispatch = useAppDispatch()
-  const router = useRouter()
-  const { data: pokemon, isLoading, isFetching, error, refetch } =
-    usePokemonDetailsQuery(detailsId)
-  const isBusy = isLoading || isFetching
-  const errorMessage = getReadableQueryError(error, t('loadError'), {
-    network: errorsT('network'),
-    invalidResponse: errorsT('invalidResponse'),
-    timeout: errorsT('timeout'),
-    httpStatus: (message, status) => errorsT('httpStatus', { message, status }),
-  })
+  const [pokemon, setPokemon] = useState<PokemonDetails | null>(null)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
-  const refreshDetails = () => {
-    dispatch(pokemonApi.util.invalidateTags([pokemonDetailsCacheTag(detailsId)]))
-    void refetch()
-  }
+  useEffect(() => {
+    let cancelled = false
+
+    void fetchPokemonDetails(detailsId)
+      .then((data) => {
+        if (!cancelled) {
+          setPokemon(data)
+        }
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) {
+          setPokemon(null)
+          setErrorMessage(error instanceof Error ? error.message : t('loadError'))
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsLoading(false)
+        }
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [detailsId, t])
 
   const closeDetails = () => {
-    router.push(buildHomePath(page))
+    const formData = new FormData()
+    formData.set('page', String(page))
+    formData.set('q', query)
+    void closePokemonDetailsAction(formData)
   }
 
   return (
@@ -52,21 +64,13 @@ function PokemonDetailsContent({ detailsId, page }: ContentProps) {
       <div className="details-panel-header">
         <h2 className="details-panel-heading">{t('heading')}</h2>
         <div className="details-panel-actions">
-          <button
-            type="button"
-            className="refresh-button"
-            aria-label={t('refreshAria')}
-            onClick={refreshDetails}
-          >
-            {t('refresh')}
-          </button>
           <button type="button" className="details-close-button" onClick={closeDetails}>
             {t('close')}
           </button>
         </div>
       </div>
 
-      {isBusy ? (
+      {isLoading ? (
         <Loading labelKey="details" />
       ) : errorMessage ? (
         <div className="error-panel">{errorMessage}</div>
@@ -82,14 +86,15 @@ function PokemonDetailsContent({ detailsId, page }: ContentProps) {
   )
 }
 
-export default function PokemonDetailsPanel() {
+export default function PokemonDetailsPanelClient() {
   const searchParams = useSearchParams()
   const detailsId = searchParams?.get('details') ?? null
   const page = parsePageParam(searchParams?.get('page') ?? null)
+  const query = parseQueryParam(searchParams?.get('q') ?? null)
 
   if (!detailsId) {
     return null
   }
 
-  return <PokemonDetailsContent key={detailsId} detailsId={detailsId} page={page} />
+  return <PokemonDetailsContent key={detailsId} detailsId={detailsId} page={page} query={query} />
 }

@@ -1,5 +1,5 @@
 import createMiddleware from 'next-intl/middleware'
-import { type NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 
 import { routing } from './i18n/routing'
 
@@ -9,16 +9,31 @@ function isHomePath(pathname: string): boolean {
   return pathname === '/' || routing.locales.some((locale) => pathname === `/${locale}`)
 }
 
-export default function middleware(request: NextRequest) {
-  const { pathname, searchParams } = request.nextUrl
+function isDetailsPath(pathname: string): boolean {
+  return (
+    pathname === '/details' ||
+    routing.locales.some((locale) => pathname === `/${locale}/details`)
+  )
+}
 
-  if (isHomePath(pathname) && !searchParams.has('page')) {
-    const url = request.nextUrl.clone()
-    url.searchParams.set('page', '1')
-    return NextResponse.redirect(url)
+function ensurePageParam(url: URL): URL {
+  const nextUrl = new URL(url)
+
+  if ((isHomePath(nextUrl.pathname) || isDetailsPath(nextUrl.pathname)) && !nextUrl.searchParams.has('page')) {
+    nextUrl.searchParams.set('page', '1')
   }
 
-  return intlMiddleware(request)
+  return nextUrl
+}
+
+export default function middleware(request: NextRequest) {
+  const url = ensurePageParam(request.nextUrl)
+
+  return intlMiddleware(
+    new NextRequest(url, {
+      headers: request.headers,
+    }),
+  )
 }
 
 export const config = {
