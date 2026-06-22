@@ -1,13 +1,22 @@
+'use client'
+
+import { useState } from 'react'
+import { useLocale, useTranslations } from 'next-intl'
+
+import { generateSelectedItemsCsvAction } from '@/actions/downloadSelectedCsv'
+import { triggerCsvDownload } from '@/utils/triggerCsvDownload'
 import { clearAll, selectSelectedCount, selectSelectedItems } from '../store/selectedItemsSlice.ts'
 import { useAppDispatch, useAppSelector } from '../store/hooks.ts'
-import { downloadSelectedItemsCsv } from '../utils/downloadSelectedCsv.ts'
 
 import '../styles/selectedItemsFlyout.css'
 
 export default function SelectedItemsFlyout() {
+  const t = useTranslations('flyout')
+  const locale = useLocale()
   const dispatch = useAppDispatch()
   const selectedCount = useAppSelector(selectSelectedCount)
   const selectedItems = useAppSelector(selectSelectedItems)
+  const [isDownloading, setIsDownloading] = useState(false)
 
   if (selectedCount === 0) {
     return null
@@ -17,21 +26,38 @@ export default function SelectedItemsFlyout() {
     dispatch(clearAll())
   }
 
-  const handleDownload = () => {
-    downloadSelectedItemsCsv(selectedItems)
+  const handleDownload = async () => {
+    setIsDownloading(true)
+
+    try {
+      const result = await generateSelectedItemsCsvAction(selectedItems, locale)
+
+      if (result) {
+        triggerCsvDownload(result.csv, result.filename)
+      }
+    } finally {
+      setIsDownloading(false)
+    }
   }
 
   return (
-    <aside className="selected-items-flyout" aria-label="Selected items">
+    <aside className="selected-items-flyout" aria-label={t('aria')}>
       <p className="selected-items-flyout__count">
-        {selectedCount} {selectedCount === 1 ? 'item' : 'items'} selected
+        {selectedCount === 1
+          ? t('countOne', { count: selectedCount })
+          : t('countMany', { count: selectedCount })}
       </p>
       <div className="selected-items-flyout__actions">
         <button type="button" className="selected-items-flyout__button" onClick={handleUnselectAll}>
-          Unselect all
+          {t('unselectAll')}
         </button>
-        <button type="button" className="selected-items-flyout__button" onClick={handleDownload}>
-          Download
+        <button
+          type="button"
+          className="selected-items-flyout__button"
+          onClick={handleDownload}
+          disabled={isDownloading}
+        >
+          {t('download')}
         </button>
       </div>
     </aside>

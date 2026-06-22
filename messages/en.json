@@ -1,0 +1,81 @@
+{
+  "app": {
+    "title": "Pokedex",
+    "description": "Browse and search Pokémon using the public PokeAPI"
+  },
+  "nav": {
+    "main": "Main navigation",
+    "home": "Home",
+    "about": "About",
+    "backToPokedex": "Back to Pokedex"
+  },
+  "theme": {
+    "label": "Theme",
+    "light": "Light",
+    "dark": "Dark"
+  },
+  "language": {
+    "label": "Language",
+    "en": "English",
+    "ru": "Russian"
+  },
+  "search": {
+    "heading": "Search",
+    "label": "Pokémon name (exact match)",
+    "placeholder": "Leave empty for list, or e.g. pikachu",
+    "button": "Search"
+  },
+  "results": {
+    "heading": "Results",
+    "refresh": "Refresh",
+    "refreshAria": "Refresh results",
+    "noResults": "No items found.",
+    "loadError": "Could not load data.",
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page {page}"
+  },
+  "details": {
+    "heading": "Details",
+    "panelAria": "Pokémon details",
+    "refresh": "Refresh",
+    "refreshAria": "Refresh details",
+    "close": "Close",
+    "loadError": "Could not load details.",
+    "id": "ID: {id}"
+  },
+  "loading": {
+    "default": "Loading…",
+    "details": "Loading details…",
+    "aria": "Loading"
+  },
+  "card": {
+    "select": "Select {name}",
+    "selectFallback": "Select Pokémon"
+  },
+  "flyout": {
+    "aria": "Selected items",
+    "countOne": "{count} item selected",
+    "countMany": "{count} items selected",
+    "unselectAll": "Unselect all",
+    "download": "Download"
+  },
+  "about": {
+    "author": "Author: Sn4zy",
+    "description": "This Pokedex application was built as part of the RS School React course. It lets you browse and search Pokémon using the public PokeAPI.",
+    "courseLink": "RS School React course"
+  },
+  "notFound": {
+    "title": "404 — Page not found",
+    "description": "The page you are looking for does not exist or has been moved."
+  },
+  "errors": {
+    "somethingWrong": "Something went wrong",
+    "tryAgain": "Try again",
+    "triggerError": "Trigger Error",
+    "network": "Network error. Please try again.",
+    "invalidResponse": "Received an invalid server response.",
+    "timeout": "Request timed out. Please try again.",
+    "httpStatus": "{message} (HTTP {status})."
+  }
+}

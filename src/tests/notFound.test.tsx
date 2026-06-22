@@ -21,6 +21,7 @@ describe('404 page', () => {
     renderApp(['/this-route-does-not-exist'])
 
     expect(screen.getByRole('heading', { name: /404.*page not found/i, level: 2 })).toBeInTheDocument()
+    expect(screen.getByRole('navigation', { name: /main navigation/i })).toBeInTheDocument()
     expect(screen.queryByRole('textbox', { name: /pokémon name/i })).not.toBeInTheDocument()
   })
 

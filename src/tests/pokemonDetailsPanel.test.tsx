@@ -1,20 +1,17 @@
 import { screen } from '@testing-library/react'
 
 import type { PokemonDetails } from '../../types/index.ts'
-import PokemonDetailsPanel from '../components/pokemonDetailsPanel.tsx'
+import PokemonDetailsPanelClient from '../components/pokemonDetailsPanelClient.tsx'
 import { renderWithSearchParams } from './testUtils.tsx'
 
-const { usePokemonDetailsQueryMock } = vi.hoisted(() => ({
-  usePokemonDetailsQueryMock: vi.fn(),
+const { fetchPokemonDetailsMock } = vi.hoisted(() => ({
+  fetchPokemonDetailsMock: vi.fn(),
 }))
 
-vi.mock('../api/pokemonApi.ts', async () => {
-  const actual = await vi.importActual<typeof import('../api/pokemonApi.ts')>('../api/pokemonApi.ts')
-  return {
-    ...actual,
-    usePokemonDetailsQuery: (detailsId: string) => usePokemonDetailsQueryMock(detailsId),
-  }
-})
+vi.mock('../../api/pokemon.ts', () => ({
+  searchPokemon: vi.fn(),
+  fetchPokemonDetails: (nameOrId: string) => fetchPokemonDetailsMock(nameOrId),
+}))
 
 const samplePokemon: PokemonDetails = {
   id: 1,
@@ -23,66 +20,37 @@ const samplePokemon: PokemonDetails = {
   flavorText: 'Description for pokemon 1.',
 }
 
-describe('PokemonDetailsPanel query states', () => {
+describe('PokemonDetailsPanelClient query states', () => {
   beforeEach(() => {
-    usePokemonDetailsQueryMock.mockReset()
+    fetchPokemonDetailsMock.mockReset()
   })
 
   it('shows loading indicator while details query is fetching', () => {
-    usePokemonDetailsQueryMock.mockReturnValue({
-      data: undefined,
-      isLoading: true,
-      isFetching: true,
-      error: undefined,
-      refetch: vi.fn(),
-    })
+    fetchPokemonDetailsMock.mockImplementation(() => new Promise(() => {}))
 
-    renderWithSearchParams(<PokemonDetailsPanel />, ['/?page=1&details=1'])
+    renderWithSearchParams(<PokemonDetailsPanelClient />, ['/?page=1&details=1'])
 
     expect(screen.getByText('Loading details…')).toBeInTheDocument()
     expect(screen.queryByText(samplePokemon.name)).not.toBeInTheDocument()
   })
 
   it('displays readable error when details query fails', async () => {
-    usePokemonDetailsQueryMock.mockReturnValue({
-      data: undefined,
-      isLoading: false,
-      isFetching: false,
-      error: { status: 404, data: 'Pokemon not found' },
-      refetch: vi.fn(),
-    })
+    fetchPokemonDetailsMock.mockRejectedValue(new Error('Failed to fetch Pokemon details: Not Found'))
 
-    renderWithSearchParams(<PokemonDetailsPanel />, ['/?page=1&details=missing'])
+    renderWithSearchParams(<PokemonDetailsPanelClient />, ['/?page=1&details=1'])
 
-    expect(await screen.findByText('Pokemon not found')).toBeInTheDocument()
+    expect(
+      await screen.findByText('Failed to fetch Pokemon details: Not Found'),
+    ).toBeInTheDocument()
   })
 
-  it('displays fallback error when rejection has no readable message', async () => {
-    usePokemonDetailsQueryMock.mockReturnValue({
-      data: undefined,
-      isLoading: false,
-      isFetching: false,
-      error: { status: 500 },
-      refetch: vi.fn(),
-    })
+  it('renders pokemon details when query succeeds', async () => {
+    fetchPokemonDetailsMock.mockResolvedValue(samplePokemon)
 
-    renderWithSearchParams(<PokemonDetailsPanel />, ['/?page=1&details=1'])
+    renderWithSearchParams(<PokemonDetailsPanelClient />, ['/?page=1&details=1'])
 
-    expect(await screen.findByText('Could not load details. (HTTP 500).')).toBeInTheDocument()
-  })
-
-  it('renders pokemon data when query succeeds', async () => {
-    usePokemonDetailsQueryMock.mockReturnValue({
-      data: samplePokemon,
-      isLoading: false,
-      isFetching: false,
-      error: undefined,
-      refetch: vi.fn(),
-    })
-
-    renderWithSearchParams(<PokemonDetailsPanel />, ['/?page=1&details=1'])
-
-    expect(await screen.findByRole('heading', { name: samplePokemon.name })).toBeInTheDocument()
+    expect(await screen.findByText(samplePokemon.name)).toBeInTheDocument()
     expect(screen.getByText(samplePokemon.flavorText)).toBeInTheDocument()
+    expect(screen.getByText(`ID: ${samplePokemon.id}`)).toBeInTheDocument()
   })
 })

@@ -4,10 +4,18 @@ import Card from './card.tsx'
 type Props = {
   items: PokemonDetails[]
   detailsOpenId: number | null
-  onOpenDetails: (id: number) => void
+  page: number
+  query: string
+  openDetailsAction: (formData: FormData) => void | Promise<void>
 }
 
-export default function CardList({ items, detailsOpenId, onOpenDetails }: Props) {
+export default function CardList({
+  items,
+  detailsOpenId,
+  page,
+  query,
+  openDetailsAction,
+}: Props) {
   return (
     <div className="pokemon-cards">
       {items.map((pokemon) => (
@@ -15,7 +23,9 @@ export default function CardList({ items, detailsOpenId, onOpenDetails }: Props)
           key={pokemon.id}
           pokemon={pokemon}
           detailsOpenId={detailsOpenId}
-          onOpenDetails={onOpenDetails}
+          page={page}
+          query={query}
+          openDetailsAction={openDetailsAction}
         />
       ))}
     </div>

@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createRtkFetchMock } from './queryTestUtils.ts'
 import { renderApp } from './testUtils.tsx'
 
-describe('RTK Query feature tests', () => {
+describe('Server-driven fetch feature tests', () => {
   afterEach(() => {
     vi.unstubAllGlobals()
     localStorage.clear()
@@ -53,7 +53,9 @@ describe('RTK Query feature tests', () => {
 
       renderApp(['/?page=1'])
 
-      expect(await screen.findByText('Internal Server Error')).toBeInTheDocument()
+      expect(
+        await screen.findByText('Failed to fetch Pokemon list: Internal Server Error'),
+      ).toBeInTheDocument()
       expect(screen.queryByRole('article')).not.toBeInTheDocument()
     })
 
@@ -68,7 +70,9 @@ describe('RTK Query feature tests', () => {
       const listArticles = screen.getAllByRole('article')
       await user.click(within(listArticles[0]).getByRole('heading', { level: 3 }))
 
-      expect(await screen.findByText('Not Found')).toBeInTheDocument()
+      expect(
+        await screen.findByText('Failed to fetch Pokemon details: Not Found'),
+      ).toBeInTheDocument()
     })
 
     it('displays a readable search error when a query returns 404', async () => {
@@ -83,11 +87,13 @@ describe('RTK Query feature tests', () => {
       await user.type(input, 'not-a-real-mon')
       await user.click(screen.getByRole('button', { name: /^search$/i }))
 
-      expect(await screen.findByText('Not Found')).toBeInTheDocument()
+      expect(
+        await screen.findByText('Failed to fetch Pokemon details: Not Found'),
+      ).toBeInTheDocument()
     })
   })
 
-  describe('caching behavior', () => {
+  describe('refresh behavior', () => {
     let fetchController: ReturnType<typeof createRtkFetchMock>
 
     beforeEach(() => {
@@ -96,69 +102,51 @@ describe('RTK Query feature tests', () => {
       vi.stubGlobal('fetch', fetchController.fetchMock)
     })
 
-    it('reuses cached list data when returning to a previous page', async () => {
+    it('refetches list data when returning to a previous page', async () => {
       const user = userEvent.setup()
 
       renderApp(['/?page=1'])
       await screen.findAllByRole('article')
       const callsAfterPage1 = fetchController.calls.length
 
-      await user.click(screen.getByRole('button', { name: /next/i }))
+      await user.click(screen.getByRole('link', { name: /next/i }))
       await waitFor(() => expect(screen.getByText('Page 2')).toBeInTheDocument())
       const callsAfterPage2 = fetchController.calls.length
       expect(callsAfterPage2).toBeGreaterThan(callsAfterPage1)
 
-      await user.click(screen.getByRole('button', { name: /previous/i }))
+      await user.click(screen.getByRole('link', { name: /previous/i }))
       await waitFor(() => expect(screen.getByText('Page 1')).toBeInTheDocument())
 
-      await new Promise((r) => setTimeout(r, 0))
-      expect(fetchController.calls.length).toBe(callsAfterPage2)
+      await waitFor(() => {
+        expect(fetchController.calls.length).toBeGreaterThan(callsAfterPage2)
+      })
     })
 
-    it('reuses cached search results when the same query is submitted again', async () => {
+    it('refetches search results when a new query is submitted after pagination', async () => {
       const user = userEvent.setup()
 
       renderApp(['/?page=1'])
       await screen.findAllByRole('article')
+
+      await user.click(screen.getByRole('link', { name: /next/i }))
+      await waitFor(() => expect(screen.getByText('Page 2')).toBeInTheDocument())
+      const callsAfterPage2 = fetchController.calls.length
 
       const input = screen.getByRole('textbox', { name: /pokémon name/i })
       await user.clear(input)
-      await user.type(input, 'pokemon-1')
+      await user.type(input, 'pokemon-3')
       await user.click(screen.getByRole('button', { name: /^search$/i }))
 
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: 'pokemon-1' })).toBeInTheDocument()
+        expect(fetchController.calls.length).toBeGreaterThan(callsAfterPage2)
       })
-      await user.clear(input)
-      await user.click(screen.getByRole('button', { name: /^search$/i }))
-      await waitFor(() => {
-        expect(screen.getAllByRole('article').length).toBeGreaterThan(1)
-      })
-      const callsAfterEmptySearch = fetchController.calls.length
-      expect(callsAfterEmptySearch).toBeGreaterThan(0)
-
-      await user.clear(input)
-      await user.type(input, 'pokemon-1')
-      await user.click(screen.getByRole('button', { name: /^search$/i }))
-      await waitFor(() => {
-        expect(screen.getByRole('heading', { name: 'pokemon-1' })).toBeInTheDocument()
-      })
-
-      await new Promise((r) => setTimeout(r, 0))
-      expect(fetchController.calls.length).toBe(callsAfterEmptySearch)
     })
 
-    it('refetches after manual refresh invalidates cached list data', async () => {
+    it('refetches after manual refresh is clicked', async () => {
       const user = userEvent.setup()
 
       renderApp(['/?page=1'])
       await screen.findAllByRole('article')
-
-      await user.click(screen.getByRole('button', { name: /next/i }))
-      await waitFor(() => expect(screen.getByText('Page 2')).toBeInTheDocument())
-
-      await user.click(screen.getByRole('button', { name: /previous/i }))
-      await waitFor(() => expect(screen.getByText('Page 1')).toBeInTheDocument())
 
       const callsBeforeRefresh = fetchController.calls.length
       await user.click(screen.getByRole('button', { name: /refresh results/i }))

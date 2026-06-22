@@ -1,1 +1,152 @@
 import '@testing-library/jest-dom/vitest'
+import type { ImgHTMLAttributes, MouseEvent, ReactNode } from 'react'
+import { vi } from 'vitest'
+
+vi.mock('next/image', () => {
+  const React = require('react')
+
+  function MockImage({
+    src,
+    alt,
+    className,
+  }: ImgHTMLAttributes<HTMLImageElement>) {
+    return React.createElement('img', { src, alt, className })
+  }
+
+  return { default: MockImage }
+})
+
+vi.mock('next/headers', () => ({
+  headers: vi.fn(async () => ({
+    get: (name: string) => {
+      if (name === 'host') {
+        return 'localhost:3000'
+      }
+      if (name === 'x-forwarded-proto') {
+        return 'http'
+      }
+      return null
+    },
+  })),
+}))
+
+const locales = ['en', 'ru'] as const
+
+function stripLocaleFromPath(pathname: string): string {
+  for (const locale of locales) {
+    if (pathname === `/${locale}`) {
+      return '/'
+    }
+    if (pathname.startsWith(`/${locale}/`)) {
+      return pathname.slice(`/${locale}`.length) || '/'
+    }
+  }
+  return pathname
+}
+
+function getPathnameFromRouter(asPath: string): string {
+  const queryIndex = asPath.indexOf('?')
+  const pathname = queryIndex === -1 ? asPath : asPath.slice(0, queryIndex)
+  return stripLocaleFromPath(pathname || '/')
+}
+
+function getSearchParamsFromAsPath(asPath: string): URLSearchParams {
+  const queryIndex = asPath.indexOf('?')
+  const search = queryIndex === -1 ? '' : asPath.slice(queryIndex + 1)
+  return new URLSearchParams(search)
+}
+
+vi.mock('next/navigation', () => {
+  const { useRouter } = require('next-router-mock')
+
+  function usePathname() {
+    const router = useRouter()
+    return getPathnameFromRouter(router.asPath)
+  }
+
+  function useSearchParams() {
+    const router = useRouter()
+    return getSearchParamsFromAsPath(router.asPath)
+  }
+
+  return {
+    useRouter,
+    usePathname,
+    useSearchParams,
+    useParams: () => useRouter().query,
+    redirect: vi.fn(),
+    notFound: vi.fn(),
+  }
+})
+
+vi.mock('@/i18n/navigation.ts', () => {
+  const React = require('react')
+  const { default: mockRouter, useRouter } = require('next-router-mock')
+
+  type LinkProps = {
+    href: string | { pathname?: string; search?: string }
+    onClick?: (event: MouseEvent<HTMLAnchorElement>) => void
+    children: ReactNode
+    className?: string
+    'aria-current'?: 'page' | undefined
+  }
+
+  function Link({ href, onClick, children, ...rest }: LinkProps) {
+    const url =
+      typeof href === 'string'
+        ? href
+        : `${href.pathname ?? '/'}${href.search ?? ''}`
+
+    return React.createElement(
+      'a',
+      {
+        href: url,
+        onClick: (event: MouseEvent<HTMLAnchorElement>) => {
+          event.preventDefault()
+          void mockRouter.push(url)
+          onClick?.(event)
+        },
+        ...rest,
+      },
+      children,
+    )
+  }
+
+  function usePathname() {
+    const router = useRouter()
+    return getPathnameFromRouter(router.asPath)
+  }
+
+  return {
+    Link,
+    useRouter,
+    usePathname,
+    redirect: vi.fn(),
+    getPathname: vi.fn(),
+  }
+})
+
+vi.mock('@/actions/pokedex.ts', async () => {
+  const mockRouter = require('next-router-mock').default
+  const { buildHomePath, buildDetailsPath } = await import('./utils/urlParams.ts')
+
+  return {
+    submitSearchAction: async (_prevState: unknown, formData: FormData) => {
+      const query = String(formData.get('q') ?? '').trim()
+      await mockRouter.push(buildHomePath(1, null, query))
+      return null
+    },
+    openPokemonDetailsAction: async (formData: FormData) => {
+      const detailsId = String(formData.get('detailsId') ?? '')
+      const page = Number.parseInt(String(formData.get('page') ?? '1'), 10)
+      const query = String(formData.get('q') ?? '').trim()
+      await mockRouter.push(buildDetailsPath(page, detailsId, query))
+    },
+    closePokemonDetailsAction: async (formData: FormData) => {
+      const page = Number.parseInt(String(formData.get('page') ?? '1'), 10)
+      const query = String(formData.get('q') ?? '').trim()
+      await mockRouter.push(buildHomePath(page, null, query))
+    },
+    refreshSearchAction: async () => {},
+  }
+})

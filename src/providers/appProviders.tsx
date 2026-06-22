@@ -1,8 +1,9 @@
+'use client'
+
 import type { ReactNode } from 'react'
-import { Provider } from 'react-redux'
 
 import { ThemeProvider } from '../context/themeProvider.tsx'
-import { store } from '../store/store.ts'
+import StoreProvider from './storeProvider.tsx'
 
 type Props = {
   children: ReactNode
@@ -10,8 +11,8 @@ type Props = {
 
 export default function AppProviders({ children }: Props) {
   return (
-    <Provider store={store}>
+    <StoreProvider>
       <ThemeProvider>{children}</ThemeProvider>
-    </Provider>
+    </StoreProvider>
   )
 }
