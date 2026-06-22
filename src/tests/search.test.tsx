@@ -1,9 +1,10 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { MockedFunction } from 'vitest'
 
 import Search from '../components/search.tsx'
 import { SEARCH_STORAGE_KEY } from '../utils/searchStorage.ts'
+import { renderWithProviders } from './testUtils.tsx'
 
 function setup(options: {
   committedQuery?: string
@@ -11,7 +12,7 @@ function setup(options: {
 } = {}) {
   const onCommittedSearch: MockedFunction<(trimmed: string) => void> =
     options.onCommittedSearch ?? vi.fn()
-  render(
+  renderWithProviders(
     <Search
       committedQuery={options.committedQuery ?? ''}
       onCommittedSearch={onCommittedSearch}

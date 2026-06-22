@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 
 import ErrorBoundary from '../components/errorBoundary.tsx'
 import ErrorThrower from '../components/errorThrower.tsx'
-import { renderApp } from './testUtils.tsx'
+import { renderApp, renderWithProviders } from './testUtils.tsx'
 
 function Boom(): never {
   throw new Error('Boom')
@@ -62,7 +62,7 @@ describe('ErrorBoundary', () => {
     const user = userEvent.setup()
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
     try {
-      render(
+      renderWithProviders(
         <ErrorBoundary>
           <ErrorThrower />
         </ErrorBoundary>,
@@ -95,7 +95,7 @@ describe('ErrorBoundary', () => {
     const user = userEvent.setup()
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
     try {
-      render(
+      renderWithProviders(
         <ErrorBoundary>
           <ErrorThrower />
         </ErrorBoundary>,

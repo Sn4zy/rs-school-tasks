@@ -12,3 +12,12 @@ export function buildListSearch(page: number, detailsId?: string | null): string
   const query = params.toString()
   return query ? `?${query}` : ''
 }
+
+export function buildHomePath(page: number, detailsId?: string | null): string {
+  const search = buildListSearch(page, detailsId)
+  return search ? '/' + search : '/'
+}
+
+export function buildDetailsPath(page: number, detailsId: string): string {
+  return `/details${buildListSearch(page, detailsId)}`
+}

@@ -1,4 +1,7 @@
+'use client'
+
 import type { KeyboardEvent, MouseEvent } from 'react'
+import { useTranslations } from 'next-intl'
 
 import type { PokemonDetails } from '../../types/index.ts'
 import { useAppDispatch, useAppSelector } from '../store/hooks.ts'
@@ -13,6 +16,7 @@ type Props = {
 }
 
 export default function Card({ pokemon, detailsOpenId, onOpenDetails }: Props) {
+  const t = useTranslations('card')
   const { id, name, sprite, flavorText } = pokemon
   const dispatch = useAppDispatch()
   const isChecked = useAppSelector(selectIsItemSelected(id))
@@ -38,6 +42,10 @@ export default function Card({ pokemon, detailsOpenId, onOpenDetails }: Props) {
     }
   }
 
+  const selectLabel = name
+    ? t('select', { name })
+    : t('selectFallback')
+
   return (
     <article
       className={`pokemon-card${isChecked ? ' pokemon-card--selected' : ''}${
@@ -50,7 +58,7 @@ export default function Card({ pokemon, detailsOpenId, onOpenDetails }: Props) {
         checked={isChecked}
         onChange={handleToggleChecked}
         onClick={handleCheckboxClick}
-        aria-label={`Select ${name || 'Pokémon'}`}
+        aria-label={selectLabel}
       />
       <div
         className="pokemon-card__body"

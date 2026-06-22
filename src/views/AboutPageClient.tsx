@@ -1,11 +1,14 @@
-import { getTranslations } from 'next-intl/server'
+'use client'
 
-import BackToPokedexLink from '@/components/backToPokedexLink'
+import { useTranslations } from 'next-intl'
+
+import { Link } from '@/i18n/navigation'
 import '@/styles/aboutPage.css'
 import '@/styles/nav.css'
 
-export default async function AboutPage() {
-  const t = await getTranslations('about')
+export default function AboutPageClient() {
+  const t = useTranslations('about')
+  const nav = useTranslations('nav')
 
   return (
     <main className="about-page">
@@ -25,7 +28,9 @@ export default async function AboutPage() {
       </section>
 
       <p>
-        <BackToPokedexLink />
+        <Link href="/?page=1" className="nav-link">
+          {nav('backToPokedex')}
+        </Link>
       </p>
     </main>
   )

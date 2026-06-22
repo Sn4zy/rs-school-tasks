@@ -1,13 +1,15 @@
 'use client'
 
 import { useCallback, useEffect, type MouseEvent, type ReactNode } from 'react'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 
-import { buildListSearch, parsePageParam } from '../utils/urlParams.ts'
+import { usePathname, useRouter } from '@/i18n/navigation.ts'
+import { buildDetailsPath, buildHomePath, parsePageParam } from '../utils/urlParams.ts'
 import '../styles/layout.css'
 import ErrorThrower from './errorThrower.tsx'
 import Result from './result.tsx'
 import Search from './search.tsx'
+import { useSearchParams } from 'next/navigation'
 
 interface Props {
   committedQuery: string
@@ -16,6 +18,7 @@ interface Props {
 }
 
 export default function Layout({ committedQuery, onCommitSearch, children }: Props) {
+  const t = useTranslations('search')
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -41,20 +44,20 @@ export default function Layout({ committedQuery, onCommitSearch, children }: Pro
   const commitSearch = useCallback(
     (trimmed: string) => {
       onCommitSearch(trimmed)
-      router.push(`/${buildListSearch(1)}`)
+      router.push(buildHomePath(1))
     },
     [onCommitSearch, router],
   )
 
   const openDetails = useCallback(
     (id: number) => {
-      router.push(`/details${buildListSearch(page, String(id))}`)
+      router.push(buildDetailsPath(page, String(id)))
     },
     [router, page],
   )
 
   const closeDetails = useCallback(() => {
-    router.push(`/${buildListSearch(page)}`)
+    router.push(buildHomePath(page))
   }, [router, page])
 
   const handleMainPanelClick = (event: MouseEvent<HTMLElement>) => {
@@ -74,7 +77,7 @@ export default function Layout({ committedQuery, onCommitSearch, children }: Pro
   return (
     <main className="main-page" onClick={handleMainPanelClick}>
       <section className="search-area">
-        <h2 className="search-area-heading">Search</h2>
+        <h2 className="search-area-heading">{t('heading')}</h2>
         <Search committedQuery={committedQuery} onCommittedSearch={commitSearch} />
       </section>
 

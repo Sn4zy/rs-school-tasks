@@ -1,6 +1,7 @@
 'use client'
 
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { useTranslations } from 'next-intl'
+import { useSearchParams } from 'next/navigation'
 
 import {
   pokemonApi,
@@ -8,6 +9,7 @@ import {
   useSearchPokemonQuery,
   type SearchPokemonArg,
 } from '../api/pokemonApi.ts'
+import { usePathname, useRouter } from '@/i18n/navigation.ts'
 import { useAppDispatch } from '../store/hooks.ts'
 import { getReadableQueryError } from '../utils/rtkQueryError.ts'
 import { parsePageParam } from '../utils/urlParams.ts'
@@ -27,6 +29,8 @@ function trim(value: string | undefined) {
 }
 
 export default function Result({ query, selectedId, onSelectPokemon }: Props) {
+  const t = useTranslations('results')
+  const errorsT = useTranslations('errors')
   const dispatch = useAppDispatch()
   const router = useRouter()
   const pathname = usePathname()
@@ -51,32 +55,37 @@ export default function Result({ query, selectedId, onSelectPokemon }: Props) {
   }
 
   const isBusy = isLoading || isFetching
-  const errorMessage = getReadableQueryError(error, 'Could not load data.')
+  const errorMessage = getReadableQueryError(error, t('loadError'), {
+    network: errorsT('network'),
+    invalidResponse: errorsT('invalidResponse'),
+    timeout: errorsT('timeout'),
+    httpStatus: (message, status) => errorsT('httpStatus', { message, status }),
+  })
 
   const showPagination = pagingOn && !isBusy && !errorMessage
 
   return (
     <>
       <div className="results-toolbar">
-        <h2 className="results-heading">Results</h2>
+        <h2 className="results-heading">{t('heading')}</h2>
         <button
           type="button"
           className="refresh-button"
-          aria-label="Refresh results"
+          aria-label={t('refreshAria')}
           onClick={refreshResults}
         >
-          Refresh
+          {t('refresh')}
         </button>
       </div>
 
       {showPagination && (
         <div className="pagination">
           <button type="button" disabled={page <= 1} onClick={() => goToPage(page - 1)}>
-            Previous
+            {t('previous')}
           </button>
-          <span className="page-number">Page {page}</span>
+          <span className="page-number">{t('page', { page })}</span>
           <button type="button" onClick={() => goToPage(page + 1)}>
-            Next
+            {t('next')}
           </button>
         </div>
       )}
@@ -86,7 +95,7 @@ export default function Result({ query, selectedId, onSelectPokemon }: Props) {
       ) : errorMessage ? (
         <div className="error-panel">{errorMessage}</div>
       ) : !items || items.length === 0 ? (
-        <p className="no-results">No items found.</p>
+        <p className="no-results">{t('noResults')}</p>
       ) : (
         <CardList
           items={items}

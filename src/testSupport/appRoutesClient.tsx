@@ -1,17 +1,16 @@
 'use client'
 
-import { usePathname } from 'next/navigation'
-
-import PokedexLayoutClient from '@/app/(shell)/(pokedex)/pokedexLayoutClient.tsx'
-import PokemonDetailsPanel from '@/components/pokemonDetailsPanel.tsx'
-import AboutPage from '@/views/AboutPage.tsx'
-import NotFoundPage from '@/views/NotFoundPage.tsx'
+import AboutPageClient from '@/views/AboutPageClient'
+import NotFoundPageClient from '@/views/NotFoundPageClient'
+import PokedexLayoutClient from '@/app/[locale]/(shell)/(pokedex)/pokedexLayoutClient'
+import PokemonDetailsPanel from '@/components/pokemonDetailsPanel'
+import { usePathname } from '@/i18n/navigation'
 
 export default function AppRoutesClient() {
   const pathname = usePathname()
 
   if (pathname === '/about') {
-    return <AboutPage />
+    return <AboutPageClient />
   }
 
   if (pathname === '/details') {
@@ -26,5 +25,5 @@ export default function AppRoutesClient() {
     return <PokedexLayoutClient>{null}</PokedexLayoutClient>
   }
 
-  return <NotFoundPage />
+  return <NotFoundPageClient />
 }

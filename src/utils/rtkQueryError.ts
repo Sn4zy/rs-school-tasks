@@ -1,6 +1,13 @@
 import type { SerializedError } from '@reduxjs/toolkit'
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 
+type ErrorMessages = {
+  network?: string
+  invalidResponse?: string
+  timeout?: string
+  httpStatus?: (message: string, status: number) => string
+}
+
 function isFetchBaseQueryError(error: unknown): error is FetchBaseQueryError {
   return typeof error === 'object' && error !== null && 'status' in error
 }
@@ -20,10 +27,10 @@ function pickMessageFromData(data: unknown): string | null {
 export function getReadableQueryError(
   error: unknown,
   fallbackMessage: string,
+  messages?: ErrorMessages,
 ): string | null {
   if (!error) return null
 
-  // Some tests / callers may provide an object-like error without `status`.
   if (typeof error === 'object' && error !== null) {
     if ('data' in error) {
       const dataMessage = pickMessageFromData((error as { data?: unknown }).data)
@@ -47,13 +54,21 @@ export function getReadableQueryError(
     if (dataMessage) return dataMessage
 
     if (typeof error.status === 'number') {
-      return `${fallbackMessage} (HTTP ${error.status}).`
+      return messages?.httpStatus
+        ? messages.httpStatus(fallbackMessage, error.status)
+        : `${fallbackMessage} (HTTP ${error.status}).`
     }
 
     if (typeof error.status === 'string') {
-      if (error.status === 'FETCH_ERROR') return 'Network error. Please try again.'
-      if (error.status === 'PARSING_ERROR') return 'Received an invalid server response.'
-      if (error.status === 'TIMEOUT_ERROR') return 'Request timed out. Please try again.'
+      if (error.status === 'FETCH_ERROR') {
+        return messages?.network ?? 'Network error. Please try again.'
+      }
+      if (error.status === 'PARSING_ERROR') {
+        return messages?.invalidResponse ?? 'Received an invalid server response.'
+      }
+      if (error.status === 'TIMEOUT_ERROR') {
+        return messages?.timeout ?? 'Request timed out. Please try again.'
+      }
       if (error.status === 'CUSTOM_ERROR') return fallbackMessage
     }
 
@@ -65,4 +80,3 @@ export function getReadableQueryError(
 
   return fallbackMessage
 }
-

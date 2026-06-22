@@ -1,15 +1,17 @@
 'use client'
 
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useTranslations } from 'next-intl'
+import { useSearchParams } from 'next/navigation'
 
 import {
   pokemonApi,
   pokemonDetailsCacheTag,
   usePokemonDetailsQuery,
 } from '../api/pokemonApi.ts'
+import { useRouter } from '@/i18n/navigation.ts'
 import { useAppDispatch } from '../store/hooks.ts'
 import { getReadableQueryError } from '../utils/rtkQueryError.ts'
-import { buildListSearch, parsePageParam } from '../utils/urlParams.ts'
+import { buildHomePath, parsePageParam } from '../utils/urlParams.ts'
 import '../styles/card.css'
 import '../styles/error-shared.css'
 import '../styles/pokemonDetailsPanel.css'
@@ -21,12 +23,19 @@ interface ContentProps {
 }
 
 function PokemonDetailsContent({ detailsId, page }: ContentProps) {
+  const t = useTranslations('details')
+  const errorsT = useTranslations('errors')
   const dispatch = useAppDispatch()
   const router = useRouter()
   const { data: pokemon, isLoading, isFetching, error, refetch } =
     usePokemonDetailsQuery(detailsId)
   const isBusy = isLoading || isFetching
-  const errorMessage = getReadableQueryError(error, 'Could not load details.')
+  const errorMessage = getReadableQueryError(error, t('loadError'), {
+    network: errorsT('network'),
+    invalidResponse: errorsT('invalidResponse'),
+    timeout: errorsT('timeout'),
+    httpStatus: (message, status) => errorsT('httpStatus', { message, status }),
+  })
 
   const refreshDetails = () => {
     dispatch(pokemonApi.util.invalidateTags([pokemonDetailsCacheTag(detailsId)]))
@@ -34,30 +43,30 @@ function PokemonDetailsContent({ detailsId, page }: ContentProps) {
   }
 
   const closeDetails = () => {
-    router.push(`/${buildListSearch(page)}`)
+    router.push(buildHomePath(page))
   }
 
   return (
-    <aside className="details-panel" aria-label="Pokémon details">
+    <aside className="details-panel" aria-label={t('panelAria')}>
       <div className="details-panel-header">
-        <h2 className="details-panel-heading">Details</h2>
+        <h2 className="details-panel-heading">{t('heading')}</h2>
         <div className="details-panel-actions">
           <button
             type="button"
             className="refresh-button"
-            aria-label="Refresh details"
+            aria-label={t('refreshAria')}
             onClick={refreshDetails}
           >
-            Refresh
+            {t('refresh')}
           </button>
           <button type="button" className="details-close-button" onClick={closeDetails}>
-            Close
+            {t('close')}
           </button>
         </div>
       </div>
 
       {isBusy ? (
-        <Loading label="Loading details…" />
+        <Loading labelKey="details" />
       ) : errorMessage ? (
         <div className="error-panel">{errorMessage}</div>
       ) : pokemon ? (
@@ -69,7 +78,7 @@ function PokemonDetailsContent({ detailsId, page }: ContentProps) {
           />
           <h3 className="pokemon-name">{pokemon.name}</h3>
           <p className="pokemon-description">{pokemon.flavorText}</p>
-          <p className="pokemon-id">ID: {pokemon.id}</p>
+          <p className="pokemon-id">{t('id', { id: pokemon.id })}</p>
         </article>
       ) : null}
     </aside>
