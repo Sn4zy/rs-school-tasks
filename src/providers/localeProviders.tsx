@@ -3,6 +3,7 @@
 import { NextIntlClientProvider, type AbstractIntlMessages } from 'next-intl'
 import type { ReactNode } from 'react'
 
+import AppShell from '@/components/appShell'
 import type { AppLocale } from '@/i18n/routing'
 import AppProviders from './appProviders'
 
@@ -15,7 +16,9 @@ type Props = {
 export default function LocaleProviders({ children, locale, messages }: Props) {
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
-      <AppProviders>{children}</AppProviders>
+      <AppProviders>
+        <AppShell>{children}</AppShell>
+      </AppProviders>
     </NextIntlClientProvider>
   )
 }

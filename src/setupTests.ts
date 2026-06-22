@@ -1,6 +1,20 @@
 import '@testing-library/jest-dom/vitest'
-import type { MouseEvent, ReactNode } from 'react'
+import type { ImgHTMLAttributes, MouseEvent, ReactNode } from 'react'
 import { vi } from 'vitest'
+
+vi.mock('next/image', () => {
+  const React = require('react')
+
+  function MockImage({
+    src,
+    alt,
+    className,
+  }: ImgHTMLAttributes<HTMLImageElement>) {
+    return React.createElement('img', { src, alt, className })
+  }
+
+  return { default: MockImage }
+})
 
 const locales = ['en', 'ru'] as const
 

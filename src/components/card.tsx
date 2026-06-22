@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl'
 import type { PokemonDetails } from '../../types/index.ts'
 import { useAppDispatch, useAppSelector } from '../store/hooks.ts'
 import { selectIsItemSelected, toggleItem } from '../store/selectedItemsSlice.ts'
+import PokemonSprite from './pokemonSprite.tsx'
 
 import '../styles/card.css'
 
@@ -21,7 +22,6 @@ export default function Card({ pokemon, detailsOpenId, onOpenDetails }: Props) {
   const dispatch = useAppDispatch()
   const isChecked = useAppSelector(selectIsItemSelected(id))
   const isDetailsOpen = detailsOpenId === id
-  const spriteSrc = sprite.trim() !== '' ? sprite : undefined
 
   const handleToggleChecked = () => {
     dispatch(toggleItem(pokemon))
@@ -67,7 +67,7 @@ export default function Card({ pokemon, detailsOpenId, onOpenDetails }: Props) {
         onClick={handleOpenDetails}
         onKeyDown={handleBodyKeyDown}
       >
-        <img className="pokemon-sprite" src={spriteSrc} alt="" />
+        <PokemonSprite src={sprite} />
         <h3 className="pokemon-name">{name}</h3>
         <p className="pokemon-description">{flavorText}</p>
       </div>

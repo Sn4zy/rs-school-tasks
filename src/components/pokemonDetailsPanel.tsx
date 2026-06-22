@@ -16,6 +16,7 @@ import '../styles/card.css'
 import '../styles/error-shared.css'
 import '../styles/pokemonDetailsPanel.css'
 import Loading from './Loading.tsx'
+import PokemonSprite from './pokemonSprite.tsx'
 
 interface ContentProps {
   detailsId: string
@@ -71,11 +72,7 @@ function PokemonDetailsContent({ detailsId, page }: ContentProps) {
         <div className="error-panel">{errorMessage}</div>
       ) : pokemon ? (
         <article className="pokemon-card pokemon-card--detail">
-          <img
-            className="pokemon-sprite"
-            src={pokemon.sprite.trim() !== '' ? pokemon.sprite : undefined}
-            alt=""
-          />
+          <PokemonSprite src={pokemon.sprite} />
           <h3 className="pokemon-name">{pokemon.name}</h3>
           <p className="pokemon-description">{pokemon.flavorText}</p>
           <p className="pokemon-id">{t('id', { id: pokemon.id })}</p>
