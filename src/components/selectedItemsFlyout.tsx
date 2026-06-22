@@ -1,10 +1,12 @@
 'use client'
 
+import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 
+import { generateSelectedItemsCsvAction } from '@/actions/downloadSelectedCsv'
+import { triggerCsvDownload } from '@/utils/triggerCsvDownload'
 import { clearAll, selectSelectedCount, selectSelectedItems } from '../store/selectedItemsSlice.ts'
 import { useAppDispatch, useAppSelector } from '../store/hooks.ts'
-import { downloadSelectedItemsCsv } from '../utils/downloadSelectedCsv.ts'
 
 import '../styles/selectedItemsFlyout.css'
 
@@ -13,6 +15,7 @@ export default function SelectedItemsFlyout() {
   const dispatch = useAppDispatch()
   const selectedCount = useAppSelector(selectSelectedCount)
   const selectedItems = useAppSelector(selectSelectedItems)
+  const [isDownloading, setIsDownloading] = useState(false)
 
   if (selectedCount === 0) {
     return null
@@ -22,8 +25,18 @@ export default function SelectedItemsFlyout() {
     dispatch(clearAll())
   }
 
-  const handleDownload = () => {
-    downloadSelectedItemsCsv(selectedItems)
+  const handleDownload = async () => {
+    setIsDownloading(true)
+
+    try {
+      const result = await generateSelectedItemsCsvAction(selectedItems)
+
+      if (result) {
+        triggerCsvDownload(result.csv, result.filename)
+      }
+    } finally {
+      setIsDownloading(false)
+    }
   }
 
   return (
@@ -37,7 +50,12 @@ export default function SelectedItemsFlyout() {
         <button type="button" className="selected-items-flyout__button" onClick={handleUnselectAll}>
           {t('unselectAll')}
         </button>
-        <button type="button" className="selected-items-flyout__button" onClick={handleDownload}>
+        <button
+          type="button"
+          className="selected-items-flyout__button"
+          onClick={handleDownload}
+          disabled={isDownloading}
+        >
           {t('download')}
         </button>
       </div>

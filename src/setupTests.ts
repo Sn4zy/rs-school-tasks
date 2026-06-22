@@ -16,6 +16,20 @@ vi.mock('next/image', () => {
   return { default: MockImage }
 })
 
+vi.mock('next/headers', () => ({
+  headers: vi.fn(async () => ({
+    get: (name: string) => {
+      if (name === 'host') {
+        return 'localhost:3000'
+      }
+      if (name === 'x-forwarded-proto') {
+        return 'http'
+      }
+      return null
+    },
+  })),
+}))
+
 const locales = ['en', 'ru'] as const
 
 function stripLocaleFromPath(pathname: string): string {

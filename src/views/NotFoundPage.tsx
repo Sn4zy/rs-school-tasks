@@ -1,11 +1,12 @@
 import { getTranslations } from 'next-intl/server'
 
-import BackToPokedexLink from '@/components/backToPokedexLink'
+import { Link } from '@/i18n/navigation'
 import '@/styles/nav.css'
 import '@/styles/notFoundPage.css'
 
 export default async function NotFoundPage() {
   const t = await getTranslations('notFound')
+  const nav = await getTranslations('nav')
 
   return (
     <main className="not-found-page">
@@ -15,7 +16,9 @@ export default async function NotFoundPage() {
       </section>
 
       <p>
-        <BackToPokedexLink />
+        <Link href="/?page=1" className="nav-link">
+          {nav('backToPokedex')}
+        </Link>
       </p>
     </main>
   )

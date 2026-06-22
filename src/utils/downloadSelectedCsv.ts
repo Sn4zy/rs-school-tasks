@@ -7,11 +7,11 @@ export function escapeCsvField(value: string): string {
   return value
 }
 
-export function buildDetailsUrl(id: number, origin = window.location.origin): string {
+export function buildDetailsUrl(id: number, origin: string): string {
   return `${origin}/details?page=1&details=${id}`
 }
 
-export function buildSelectedItemsCsv(items: PokemonDetails[], origin = window.location.origin): string {
+export function buildSelectedItemsCsv(items: PokemonDetails[], origin: string): string {
   const header = ['id', 'name', 'description', 'details_url', 'sprite_url']
   const rows = items.map((item) => [
     String(item.id),
@@ -22,21 +22,6 @@ export function buildSelectedItemsCsv(items: PokemonDetails[], origin = window.l
   ])
 
   return [header.join(','), ...rows.map((row) => row.join(','))].join('\n')
-}
-
-export function downloadSelectedItemsCsv(items: PokemonDetails[]): void {
-  if (items.length === 0) {
-    return
-  }
-
-  const csvContent = buildSelectedItemsCsv(items)
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' })
-  const objectUrl = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = objectUrl
-  link.download = `${items.length}_items.csv`
-  link.click()
-  URL.revokeObjectURL(objectUrl)
 }
 
 export function getSelectedItemsCsvFilename(count: number): string {
